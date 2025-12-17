@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar & Scheduling - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .calendar-week {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+        }
+        .calendar-time {
+            background: var(--bg-paper);
+            padding: var(--spacing-sm);
+            font-size: 0.75rem;
+            text-align: right;
+            font-weight: 600;
+        }
+        .calendar-slot {
+            background: var(--bg-default);
+            min-height: 60px;
+            padding: var(--spacing-xs);
+            position: relative;
+        }
+        .calendar-event {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary-main);
+            padding: var(--spacing-xs);
+            border-radius: var(--border-radius);
+            font-size: 0.75rem;
+            margin-bottom: var(--spacing-xs);
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+        .calendar-event:hover {
+            background: var(--primary-main);
+            color: white;
+            transform: scale(1.02);
+        }
+        .calendar-header {
+            background: var(--primary-main);
+            color: white;
+            padding: var(--spacing-sm);
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="admin-dashboard.html">Dashboard</a>
+                    <a href="admin-meet-and-greet.html">Meet & Greets</a>
+                    <a href="admin-class-setup.html">Classes</a>
+                    <a href="admin-calendar.html" class="active">Calendar</a>
+                    <a href="admin-google-drive.html">Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">AD</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Admin User</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title flex-between">
+            <div>
+                <h1>Calendar & Scheduling</h1>
+                <p class="text-muted">Week of January 20-24, 2025</p>
+            </div>
+            <div class="flex-gap">
+                <button class="btn btn-outline">← Previous Week</button>
+                <button class="btn btn-outline">Next Week →</button>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>🖱️ Drag & Drop:</strong> Drag lessons to reschedule. System automatically checks for conflicts and sends notifications.
+        </div>
+
+        <!-- Calendar -->
+        <div class="card">
+            <div class="card-body" style="padding: 0; overflow-x: auto;">
+                <div class="calendar-week">
+                    <!-- Header Row -->
+                    <div style="background: var(--bg-paper);"></div>
+                    <div class="calendar-header">Monday<br><span style="font-size: 0.875rem; opacity: 0.9;">Jan 20</span></div>
+                    <div class="calendar-header">Tuesday<br><span style="font-size: 0.875rem; opacity: 0.9;">Jan 21</span></div>
+                    <div class="calendar-header">Wednesday<br><span style="font-size: 0.875rem; opacity: 0.9;">Jan 22</span></div>
+                    <div class="calendar-header">Thursday<br><span style="font-size: 0.875rem; opacity: 0.9;">Jan 23</span></div>
+                    <div class="calendar-header">Friday<br><span style="font-size: 0.875rem; opacity: 0.9;">Jan 24</span></div>
+
+                    <!-- 9:00 AM -->
+                    <div class="calendar-time">9:00 AM</div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+
+                    <!-- 10:00 AM -->
+                    <div class="calendar-time">10:00 AM</div>
+                    <div class="calendar-slot">
+                        <div class="calendar-event" style="border-color: var(--success-main); background: #c8e6c9;">
+                            <strong>Meet & Greet</strong><br>
+                            Sarah Smith
+                        </div>
+                    </div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+
+                    <!-- 3:00 PM -->
+                    <div class="calendar-time">3:00 PM</div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot">
+                        <div class="calendar-event" style="border-color: var(--secondary-main); background: #e3f2fd;">
+                            <strong>Emma - Piano</strong><br>
+                            Individual • Ms. Johnson
+                        </div>
+                    </div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+
+                    <!-- 4:00 PM -->
+                    <div class="calendar-time">4:00 PM</div>
+                    <div class="calendar-slot">
+                        <div class="calendar-event">
+                            <strong>Piano Foundation 1</strong><br>
+                            12 students • Ms. Johnson
+                        </div>
+                    </div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot">
+                        <div class="calendar-event">
+                            <strong>Singing Group</strong><br>
+                            15 students • Ms. Johnson
+                        </div>
+                    </div>
+                    <div class="calendar-slot"></div>
+
+                    <!-- 5:00 PM -->
+                    <div class="calendar-time">5:00 PM</div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot">
+                        <div class="calendar-event">
+                            <strong>Guitar Intermediate</strong><br>
+                            8 students • Mr. Williams
+                        </div>
+                    </div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                    <div class="calendar-slot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Legend</h3>
+            </div>
+            <div class="card-body">
+                <div class="flex-gap" style="flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <div style="width: 20px; height: 20px; background: var(--primary-light); border-left: 4px solid var(--primary-main); border-radius: 4px;"></div>
+                        <span>Group Lesson</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <div style="width: 20px; height: 20px; background: #e3f2fd; border-left: 4px solid var(--secondary-main); border-radius: 4px;"></div>
+                        <span>Individual Lesson</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <div style="width: 20px; height: 20px; background: #c8e6c9; border-left: 4px solid var(--success-main); border-radius: 4px;"></div>
+                        <span>Meet & Greet</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

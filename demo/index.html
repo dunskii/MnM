@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music 'n Me - Platform Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+        }
+        .demo-card {
+            background: var(--bg-default);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-lg);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            border: 2px solid transparent;
+        }
+        .demo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-main);
+            text-decoration: none;
+        }
+        .demo-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-light);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: var(--spacing-md);
+        }
+        .demo-card h3 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        .demo-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0;
+        }
+        .section-title {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 2px solid var(--border-color);
+        }
+        .section-title:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <h1>Music 'n Me Platform Demo</h1>
+            <p>Explore the complete Phase 1 user journey - from meet & greet to daily portal use</p>
+            <p class="text-muted" style="font-size: 0.875rem; margin-top: var(--spacing-md);">
+                Click any card below to view that page mockup
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Public Pages Section -->
+        <h2 class="section-title">🌐 Public Pages (No Login Required)</h2>
+        <div class="demo-grid">
+            <a href="meet-and-greet.html" class="demo-card">
+                <div class="demo-icon">📅</div>
+                <h3>Meet & Greet Booking</h3>
+                <p>Parents book introductory sessions without creating an account. Includes email verification.</p>
+            </a>
+
+            <a href="verification-success.html" class="demo-card">
+                <div class="demo-icon">✅</div>
+                <h3>Email Verification</h3>
+                <p>Confirmation page after parent verifies their email for meet & greet booking.</p>
+            </a>
+
+            <a href="registration.html" class="demo-card">
+                <div class="demo-icon">📝</div>
+                <h3>Parent Registration</h3>
+                <p>Pre-filled registration form after admin approves meet & greet. Creates parent account.</p>
+            </a>
+
+            <a href="login.html" class="demo-card">
+                <div class="demo-icon">🔐</div>
+                <h3>Login Page</h3>
+                <p>Standard login for all users (Admin, Teacher, Parent, Student).</p>
+            </a>
+        </div>
+
+        <!-- Admin Portal Section -->
+        <h2 class="section-title">👔 Admin Portal</h2>
+        <div class="demo-grid">
+            <a href="admin-dashboard.html" class="demo-card">
+                <div class="demo-icon">📊</div>
+                <h3>Admin Dashboard</h3>
+                <p>Overview with key metrics, pending tasks, and quick actions. Main admin control center.</p>
+            </a>
+
+            <a href="admin-meet-and-greet.html" class="demo-card">
+                <div class="demo-icon">👋</div>
+                <h3>Meet & Greet Management</h3>
+                <p>View, manage, and approve meet & greet bookings. Send registration invitations.</p>
+            </a>
+
+            <a href="admin-class-setup.html" class="demo-card">
+                <div class="demo-icon">🎓</div>
+                <h3>Class Setup & Enrollment</h3>
+                <p>Create lessons, assign teachers, enroll students. Core school management.</p>
+            </a>
+
+            <a href="admin-google-drive.html" class="demo-card">
+                <div class="demo-icon">💾</div>
+                <h3>Google Drive Linking</h3>
+                <p>Browse Google Drive folders and link them to classes or individual students.</p>
+            </a>
+
+            <a href="admin-calendar.html" class="demo-card">
+                <div class="demo-icon">📆</div>
+                <h3>Calendar & Scheduling</h3>
+                <p>Drag-and-drop lesson rescheduling with conflict detection. View all school activities.</p>
+            </a>
+        </div>
+
+        <!-- Teacher Portal Section -->
+        <h2 class="section-title">👩‍🏫 Teacher Portal</h2>
+        <div class="demo-grid">
+            <a href="teacher-dashboard.html" class="demo-card">
+                <div class="demo-icon">📚</div>
+                <h3>Teacher Dashboard</h3>
+                <p>View ALL school lessons and students. Mark attendance for any class (coverage support).</p>
+            </a>
+
+            <a href="teacher-file-upload.html" class="demo-card">
+                <div class="demo-icon">📤</div>
+                <h3>File Upload & Management</h3>
+                <p>Upload resources that auto-sync to Google Drive. Set visibility rules for files.</p>
+            </a>
+
+            <a href="teacher-attendance.html" class="demo-card">
+                <div class="demo-icon">✓</div>
+                <h3>Attendance Tracking</h3>
+                <p>Mark attendance for today's lessons with notes. View attendance history.</p>
+            </a>
+        </div>
+
+        <!-- Parent Portal Section -->
+        <h2 class="section-title">👨‍👩‍👧 Parent Portal</h2>
+        <div class="demo-grid">
+            <a href="parent-dashboard.html" class="demo-card">
+                <div class="demo-icon">🏠</div>
+                <h3>Parent Dashboard</h3>
+                <p>View family schedule, outstanding invoices, recent files. Central hub for parents.</p>
+            </a>
+
+            <a href="parent-payments.html" class="demo-card">
+                <div class="demo-icon">💳</div>
+                <h3>Payments & Invoices</h3>
+                <p>View invoices, make online payments via Stripe, download receipts.</p>
+            </a>
+
+            <a href="parent-schedule.html" class="demo-card">
+                <div class="demo-icon">🗓️</div>
+                <h3>Family Schedule</h3>
+                <p>Combined calendar view of all children's lessons and activities.</p>
+            </a>
+        </div>
+
+        <!-- Student Portal Section -->
+        <h2 class="section-title">🎵 Student Portal</h2>
+        <div class="demo-grid">
+            <a href="student-dashboard.html" class="demo-card">
+                <div class="demo-icon">🎸</div>
+                <h3>Student Dashboard</h3>
+                <p>View upcoming lessons, download shared files, see attendance history.</p>
+            </a>
+
+            <a href="student-files.html" class="demo-card">
+                <div class="demo-icon">📁</div>
+                <h3>Class Resources</h3>
+                <p>Browse and download sheet music, backing tracks, and learning materials.</p>
+            </a>
+        </div>
+
+        <!-- User Journey Section -->
+        <h2 class="section-title">🚀 Suggested Viewing Order (User Journey)</h2>
+        <div class="alert alert-info">
+            <p><strong>To see the complete onboarding flow, view pages in this order:</strong></p>
+            <ol style="margin: var(--spacing-md) 0 0 var(--spacing-lg); line-height: 2;">
+                <li><strong>Meet & Greet Booking</strong> - Parent books without account</li>
+                <li><strong>Email Verification</strong> - Parent confirms email</li>
+                <li><strong>Admin: Meet & Greet Management</strong> - Admin approves booking</li>
+                <li><strong>Parent Registration</strong> - Parent creates account (pre-filled)</li>
+                <li><strong>Admin: Class Setup</strong> - Admin assigns student to classes</li>
+                <li><strong>Admin: Google Drive Linking</strong> - Admin links Drive folders</li>
+                <li><strong>Teacher: File Upload</strong> - Teacher uploads materials</li>
+                <li><strong>Student Dashboard</strong> - Student accesses resources</li>
+                <li><strong>Parent: Payments</strong> - Parent pays invoice</li>
+            </ol>
+        </div>
+
+        <!-- Features Highlight -->
+        <h2 class="section-title">✨ Key Features Demonstrated</h2>
+        <div class="grid grid-3">
+            <div class="card">
+                <h4>📧 Meet & Greet System</h4>
+                <p class="text-muted">Public booking, email verification, admin approval workflow, pre-populated registration</p>
+            </div>
+            <div class="card">
+                <h4>💾 Google Drive Sync</h4>
+                <p class="text-muted">Two-way file sync, folder mapping, visibility rules, seamless teacher-student file sharing</p>
+            </div>
+            <div class="card">
+                <h4>👀 Teacher Full Access</h4>
+                <p class="text-muted">Teachers view ALL classes and students, mark attendance for any lesson (coverage support)</p>
+            </div>
+            <div class="card">
+                <h4>💳 Term-Based Billing</h4>
+                <p class="text-muted">Automated invoice generation, online Stripe payments, manual payment recording</p>
+            </div>
+            <div class="card">
+                <h4>📅 Smart Scheduling</h4>
+                <p class="text-muted">Drag-and-drop calendar, conflict detection, email notifications for changes</p>
+            </div>
+            <div class="card">
+                <h4>👨‍👩‍👧‍👦 Family Accounts</h4>
+                <p class="text-muted">Single parent manages multiple children, combined schedule view, family invoicing</p>
+            </div>
+        </div>
+
+        <div class="text-center mt-xl mb-xl">
+            <p class="text-muted">Phase 2 features (monthly subscriptions, events, blog, WhatsApp/SMS) not included in this demo</p>
+            <p class="text-muted" style="font-size: 0.875rem;">Built for Music 'n Me | ~200 students, 2 locations | 12-week MVP</p>
+        </div>
+    </div>
+</body>
+</html>

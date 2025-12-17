@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="student-dashboard.html" class="active">My Dashboard</a>
+                    <a href="student-files.html">My Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, var(--primary-main), var(--secondary-main));">E</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Emma Smith</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Student</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="page-title text-center">
+            <h1>Welcome Emma! 🎹</h1>
+            <p class="text-muted">You're doing great! Keep practicing!</p>
+        </div>
+
+        <!-- Next Lesson -->
+        <div class="card" style="background: linear-gradient(135deg, var(--primary-main), var(--primary-dark)); color: white; border: none;">
+            <div class="card-body">
+                <h3 style="color: white; margin-bottom: var(--spacing-sm);">Your Next Lesson</h3>
+                <div class="grid grid-2" style="gap: var(--spacing-lg);">
+                    <div>
+                        <div style="opacity: 0.9; font-size: 0.875rem; margin-bottom: 4px;">Class</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">Piano Foundation 1</div>
+                    </div>
+                    <div>
+                        <div style="opacity: 0.9; font-size: 0.875rem; margin-bottom: 4px;">When</div>
+                        <div style="font-size: 1.25rem; font-weight: 700;">Tomorrow at 4:00 PM</div>
+                        <div style="opacity: 0.9; font-size: 0.875rem;">Monday, January 20, 2025</div>
+                    </div>
+                </div>
+                <div class="divider" style="border-color: rgba(255,255,255,0.2);"></div>
+                <div class="flex-between">
+                    <div>
+                        <div style="opacity: 0.9; font-size: 0.875rem; margin-bottom: 4px;">Teacher</div>
+                        <div style="font-weight: 600;">Ms. Johnson</div>
+                    </div>
+                    <div>
+                        <div style="opacity: 0.9; font-size: 0.875rem; margin-bottom: 4px;">Location</div>
+                        <div style="font-weight: 600;">Studio A, Room 1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Files to Practice -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🎵 New Practice Materials</h3>
+                <span class="badge badge-primary">2 new files today!</span>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Ms. Johnson uploaded new materials for tomorrow's lesson!</strong>
+                </div>
+
+                <div class="file-list">
+                    <div class="file-item" style="background: var(--primary-light);">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name">Für Elise - Sheet Music.pdf</div>
+                            <div class="file-meta">
+                                <span class="badge badge-sm" style="background: var(--primary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Sheet Music</span>
+                                Uploaded today • 524 KB
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="downloadFile()">
+                            ⬇ Download
+                        </button>
+                    </div>
+
+                    <div class="file-item" style="background: var(--primary-light);">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-info">
+                            <div class="file-name">Für Elise - Backing Track.mp3</div>
+                            <div class="file-meta">
+                                <span class="badge badge-sm" style="background: var(--secondary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Backing Track</span>
+                                Uploaded today • 2.1 MB
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="downloadFile()">
+                            ⬇ Download
+                        </button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <h4 style="font-size: 1rem; margin-bottom: var(--spacing-md);">All Class Files</h4>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name">Scales Practice - Week 1.pdf</div>
+                            <div class="file-meta">Uploaded 2 days ago • 412 KB</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm">Download</button>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-info">
+                            <div class="file-name">Rhythm Exercise 1.mp3</div>
+                            <div class="file-meta">Uploaded 5 days ago • 1.8 MB</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm">Download</button>
+                    </div>
+                </div>
+
+                <a href="student-files.html" class="btn btn-outline w-full mt-md">
+                    View All Files (18) →
+                </a>
+            </div>
+        </div>
+
+        <!-- Attendance & Progress -->
+        <div class="grid grid-2 mt-lg mb-xl">
+            <!-- Attendance Record -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 Your Attendance</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-lg">
+                        <div style="font-size: 3rem; font-weight: 700; color: var(--success-main);">100%</div>
+                        <div class="text-muted">Perfect attendance this term!</div>
+                    </div>
+
+                    <div style="background: var(--bg-paper); padding: var(--spacing-md); border-radius: var(--border-radius); margin-bottom: var(--spacing-md);">
+                        <div class="flex-between mb-sm">
+                            <span class="text-muted">Lessons Attended</span>
+                            <strong>3 / 3</strong>
+                        </div>
+                        <div style="background: white; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: var(--success-main); height: 100%; width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <strong>🌟 Great job!</strong> You've attended all your lessons this term!
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Classes -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🎓 My Classes</h3>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">🎹</div>
+                            <div class="file-info">
+                                <div class="file-name">Piano Foundation 1</div>
+                                <div class="file-meta">
+                                    Ms. Johnson • Mondays 4:00 PM<br>
+                                    <span class="text-muted" style="font-size: 0.75rem;">12 students • Studio A</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-success">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div>
+                        <h4 style="font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--spacing-sm);">This Term's Schedule</h4>
+                        <div style="display: grid; gap: var(--spacing-sm);">
+                            <div style="display: flex; justify-content: space-between; padding: var(--spacing-sm); background: var(--bg-paper); border-radius: var(--border-radius);">
+                                <span>Jan 20</span>
+                                <span class="badge badge-secondary">Upcoming</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: var(--spacing-sm); background: var(--bg-paper); border-radius: var(--border-radius);">
+                                <span>Jan 27</span>
+                                <span class="badge badge-secondary">Scheduled</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: var(--spacing-sm); background: var(--bg-paper); border-radius: var(--border-radius);">
+                                <span>Feb 3</span>
+                                <span class="badge badge-secondary">Scheduled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadFile() {
+            alert('File download started!\n\nIn the real system:\n✓ File downloaded from Google Drive or portal CDN\n✓ Download logged for analytics\n✓ File opens in browser or downloads to device\n\nDemo complete! You\'ve seen the full user journey from meet & greet to student file access.');
+            setTimeout(() => {
+                if (confirm('Return to demo index to explore other pages?')) {
+                    window.location.href = 'index.html';
+                }
+            }, 500);
+        }
+    </script>
+</body>
+</html>

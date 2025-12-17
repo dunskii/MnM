@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Class Resources - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+        }
+        .file-card {
+            background: var(--bg-default);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .file-card:hover {
+            border-color: var(--primary-main);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .file-card.new {
+            border-color: var(--primary-main);
+            background: var(--primary-light);
+        }
+        .file-preview {
+            width: 100%;
+            height: 150px;
+            background: var(--bg-paper);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+        }
+        .filter-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="student-dashboard.html">My Dashboard</a>
+                    <a href="student-files.html" class="active">My Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, var(--primary-main), var(--secondary-main));">E</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Emma Smith</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Student</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title">
+            <h1>🎵 My Class Resources</h1>
+            <p class="text-muted">All your practice materials in one place</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-4 mb-lg">
+            <div class="stat-card">
+                <div class="stat-value">18</div>
+                <div class="stat-label">Total Files</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--primary-main);">2</div>
+                <div class="stat-label">New Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">9</div>
+                <div class="stat-label">Sheet Music</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Audio Files</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="card-body">
+                <div class="grid grid-3">
+                    <div class="form-group mb-0">
+                        <label class="form-label">Filter by Class</label>
+                        <select class="form-select">
+                            <option value="all" selected>All Classes</option>
+                            <option value="piano-1">Piano Foundation 1</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Filter by Type</label>
+                        <select class="form-select">
+                            <option value="all" selected>All Types</option>
+                            <option value="sheet-music">Sheet Music</option>
+                            <option value="backing-track">Backing Tracks</option>
+                            <option value="recording">Recordings</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Search Files</label>
+                        <input type="text" class="form-input" placeholder="Search...">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="btn btn-primary btn-sm">All Files (18)</button>
+            <button class="btn btn-text btn-sm">🆕 New (2)</button>
+            <button class="btn btn-text btn-sm">📄 Sheet Music (9)</button>
+            <button class="btn btn-text btn-sm">🎵 Backing Tracks (7)</button>
+            <button class="btn btn-text btn-sm">🎤 Recordings (2)</button>
+        </div>
+
+        <!-- New Files Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🆕 New Files (Just Added!)</h3>
+                <span class="badge badge-primary">2 files</span>
+            </div>
+            <div class="card-body">
+                <div class="file-grid">
+                    <div class="file-card new" onclick="downloadFile('fur-elise-sheet')">
+                        <div class="file-preview">📄</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Für Elise - Sheet Music</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">PDF • 524 KB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--primary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Sheet Music</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • Today
+                        </div>
+                        <button class="btn btn-primary btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card new" onclick="downloadFile('fur-elise-backing')">
+                        <div class="file-preview">🎵</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Für Elise - Backing Track</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">MP3 • 2.1 MB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--secondary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Backing Track</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • Today
+                        </div>
+                        <button class="btn btn-primary btn-sm w-full">⬇ Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Files Section -->
+        <div class="card mt-lg">
+            <div class="card-header">
+                <h3 class="card-title">📚 All Class Files</h3>
+                <div class="flex-gap">
+                    <button class="btn btn-text btn-sm">Grid View</button>
+                    <button class="btn btn-text btn-sm">List View</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="file-grid">
+                    <div class="file-card">
+                        <div class="file-preview">📄</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Scales Practice - Week 1</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">PDF • 412 KB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--primary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Sheet Music</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 2 days ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card">
+                        <div class="file-preview">🎵</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Rhythm Exercise 1</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">MP3 • 1.8 MB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--secondary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Backing Track</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 5 days ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card">
+                        <div class="file-preview">📄</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">C Major Scale - Left Hand</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">PDF • 298 KB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--primary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Sheet Music</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 1 week ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card">
+                        <div class="file-preview">🎤</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Example Performance</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">MP3 • 3.2 MB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: #9c27b0; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Recording</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 1 week ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card">
+                        <div class="file-preview">📄</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Finger Exercises - Week 1</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">PDF • 356 KB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--primary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Sheet Music</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 2 weeks ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+
+                    <div class="file-card">
+                        <div class="file-preview">🎵</div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);">Metronome Practice 60 BPM</h4>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--spacing-sm);">MP3 • 1.5 MB</div>
+                        <div class="flex-gap" style="justify-content: center; margin-bottom: var(--spacing-sm);">
+                            <span class="badge badge-sm" style="background: var(--secondary-main); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Backing Track</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; margin-bottom: var(--spacing-sm);">
+                            Ms. Johnson • 2 weeks ago
+                        </div>
+                        <button class="btn btn-outline btn-sm w-full">⬇ Download</button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-lg">
+                    <button class="btn btn-outline">Load More Files...</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download All -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-body text-center">
+                <h4>Download All Your Files</h4>
+                <p class="text-muted">Get all your class resources in one ZIP file</p>
+                <button class="btn btn-primary btn-lg mt-md">
+                    📦 Download All Files (18 files, 12.4 MB)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadFile(fileId) {
+            alert('File download started!\n\nIn the real system:\n✓ File downloaded from Google Drive or portal CDN\n✓ Download logged for analytics\n✓ File opens in browser or downloads to device\n\nAll files are synced from Google Drive automatically!');
+        }
+    </script>
+</body>
+</html>

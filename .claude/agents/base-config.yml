@@ -1,0 +1,86 @@
+---
+# Base Configuration for Music 'n Me Agents
+# This configuration is inherited by all specialized agents
+
+project:
+  name: Music 'n Me
+  description: SaaS platform for managing music schools
+  client: Music 'n Me (musicnme.com.au)
+  timeline: 12 weeks to MVP
+  students: ~200
+  locations: 2 locations, 3 rooms each
+
+tech_stack:
+  backend:
+    - Node.js 18+
+    - TypeScript
+    - Express
+    - Prisma
+    - PostgreSQL 15+
+  frontend:
+    - React 18+
+    - TypeScript
+    - Vite
+    - Material-UI v5
+    - React Query
+  auth: JWT + bcrypt (12 rounds min)
+  hosting: DigitalOcean
+
+integrations:
+  phase_1:
+    - Stripe (payments)
+    - SendGrid (email)
+    - Google Drive API (file sync)
+  phase_2:
+    - Twilio (WhatsApp/SMS)
+    - Xero (accounting)
+    - Google Calendar
+
+core_features:
+  - Hybrid lesson model (CRITICAL - group + individual sessions)
+  - Meet & Greet booking system
+  - Google Drive two-way sync
+  - Calendar with drag-and-drop
+  - Multi-tenant architecture (schoolId filtering)
+  - Term-based invoicing
+  - Family accounts
+
+brand:
+  colors:
+    primary: '#116dff'
+    primary_light: '#a3d9f6'
+    primary_dark: '#3899ec'
+    secondary: '#7fccf7'
+    error: '#ff4040'
+    background: '#ffffff'
+    paper: '#f5f5f5'
+    text_primary: '#080808'
+    text_secondary: '#9DA5AF'
+
+security_rules:
+  - ALWAYS filter by schoolId in every database query
+  - Never skip multi-tenancy isolation
+  - Hash passwords with bcrypt (12 rounds minimum)
+  - Validate all user input
+  - Prevent XSS, SQL injection, CSRF
+
+user_roles:
+  - ADMIN: Full control - manage everything
+  - TEACHER: View ALL classes and students, mark attendance, upload resources
+  - PARENT: View family schedule, pay invoices, book hybrid sessions
+  - STUDENT: Read-only access to own data
+
+lesson_types:
+  - INDIVIDUAL: 45 minutes
+  - GROUP: 60 minutes
+  - BAND: 60 minutes
+  - HYBRID: Configurable (group + individual weeks)
+
+critical_workflows:
+  - Hybrid lesson booking (parents book individual session slots)
+  - Meet & greet → parent registration → enrollment
+  - Invoice generation with hybrid pricing split
+  - Google Drive two-way file sync
+
+documentation_path: C:\Users\dunsk\code\MnM\Planning
+---

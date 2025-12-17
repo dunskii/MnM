@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="parent-dashboard.html" class="active">Dashboard</a>
+                    <a href="parent-schedule.html">Schedule</a>
+                    <a href="parent-payments.html">Payments</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">SS</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Sarah Smith</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Parent</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title">
+            <h1>Welcome back, Sarah!</h1>
+            <p class="text-muted">Here's what's happening with your family</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-3 mb-lg">
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Upcoming Lessons This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$0</div>
+                <div class="stat-label">Outstanding Balance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">New Files Shared</div>
+            </div>
+        </div>
+
+        <!-- Children Overview & Upcoming Lessons -->
+        <div class="grid grid-2">
+            <!-- My Children -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">My Children</h3>
+                    <button class="btn btn-text btn-sm">+ Add Child</button>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon" style="background: var(--primary-main); color: white;">E</div>
+                            <div class="file-info">
+                                <div class="file-name">Emma Smith</div>
+                                <div class="file-meta">7 years old • Piano Foundation 1</div>
+                            </div>
+                            <a href="student-dashboard.html" class="btn btn-sm btn-outline">View Portal</a>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-sm);">Attendance Record</h4>
+                        <div class="flex-between mb-sm">
+                            <span class="text-muted">This Term</span>
+                            <strong>3 / 3 lessons attended</strong>
+                        </div>
+                        <div style="background: var(--bg-paper); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: var(--success-main); height: 100%; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Lessons -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">This Week's Lessons</h3>
+                    <a href="parent-schedule.html" class="btn btn-text btn-sm">View Full Schedule</a>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">🎹</div>
+                            <div class="file-info">
+                                <div class="file-name">Piano Foundation 1</div>
+                                <div class="file-meta">Monday, Jan 20 • 4:00 PM • Studio A</div>
+                            </div>
+                            <span class="badge badge-primary">Tomorrow</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">🎹</div>
+                            <div class="file-info">
+                                <div class="file-name">Piano Foundation 1</div>
+                                <div class="file-meta">Monday, Jan 27 • 4:00 PM • Studio A</div>
+                            </div>
+                            <span class="badge badge-secondary">Next Week</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-md">
+                        <strong>📅 Reminder:</strong> Emma's next lesson is tomorrow at 4:00 PM
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments & Files -->
+        <div class="grid grid-2 mt-lg">
+            <!-- Payment Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Payment Status</h3>
+                    <a href="parent-payments.html" class="btn btn-text btn-sm">View All Invoices</a>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <strong>✓ All Paid Up!</strong> No outstanding invoices
+                    </div>
+
+                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-md);">Recent Payments</h4>
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">💳</div>
+                            <div class="file-info">
+                                <div class="file-name">Term 1, 2025 Invoice</div>
+                                <div class="file-meta">Paid $695 • Jan 15, 2025 • Stripe</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline">View Receipt</button>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="grid grid-2">
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem;">Total Paid This Year</div>
+                            <div style="font-size: 1.5rem; font-weight: 700;">$695</div>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem;">Payment Method</div>
+                            <div style="font-size: 1rem; font-weight: 600;">Visa •••• 4242</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Files -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recently Shared Files</h3>
+                    <span class="badge badge-primary">5 new</span>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">📄</div>
+                            <div class="file-info">
+                                <div class="file-name">Für Elise - Sheet Music.pdf</div>
+                                <div class="file-meta">Piano Foundation 1 • Ms. Johnson • Today</div>
+                            </div>
+                            <button class="btn btn-sm btn-primary">Download</button>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">🎵</div>
+                            <div class="file-info">
+                                <div class="file-name">Für Elise - Backing Track.mp3</div>
+                                <div class="file-meta">Piano Foundation 1 • Ms. Johnson • Today</div>
+                            </div>
+                            <button class="btn btn-sm btn-primary">Download</button>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">📄</div>
+                            <div class="file-info">
+                                <div class="file-name">Scales Practice - Week 1.pdf</div>
+                                <div class="file-meta">Piano Foundation 1 • Ms. Johnson • 2 days ago</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline">Download</button>
+                        </div>
+                    </div>
+
+                    <a href="student-dashboard.html" class="btn btn-outline w-full mt-md">
+                        View All Files →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-4">
+                    <a href="parent-schedule.html" class="btn btn-outline w-full">
+                        📅 View Schedule
+                    </a>
+                    <a href="parent-payments.html" class="btn btn-outline w-full">
+                        💳 Make Payment
+                    </a>
+                    <a href="student-dashboard.html" class="btn btn-outline w-full">
+                        📁 Browse Files
+                    </a>
+                    <button class="btn btn-outline w-full">
+                        📧 Contact Teacher
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

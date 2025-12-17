@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="teacher-dashboard.html" class="active">Dashboard</a>
+                    <a href="teacher-file-upload.html">Upload Files</a>
+                    <a href="teacher-attendance.html">Attendance</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">MJ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Ms. Johnson</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Teacher - Piano</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title flex-between">
+            <div>
+                <h1>Welcome, Ms. Johnson!</h1>
+                <p class="text-muted">View ALL school lessons and students (full access for coverage support)</p>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-4 mb-lg">
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">My Classes Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">27</div>
+                <div class="stat-label">My Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">45</div>
+                <div class="stat-label">All School Lessons (This Week)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">203</div>
+                <div class="stat-label">All School Students</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>🔓 Full School Access:</strong> You can view and mark attendance for ANY lesson to support other teachers when needed
+        </div>
+
+        <!-- Today's Lessons & Quick Actions -->
+        <div class="grid grid-2">
+            <!-- Today's Schedule -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📅 Today's Lessons</h3>
+                    <span class="badge badge-primary">3 lessons</span>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item" style="border-left: 4px solid var(--primary-main);">
+                            <div class="file-icon">🎹</div>
+                            <div class="file-info">
+                                <div class="file-name">Piano Foundation 1</div>
+                                <div class="file-meta">4:00 PM - 5:00 PM • Studio A, Room 1</div>
+                                <div class="file-meta">12 students enrolled</div>
+                            </div>
+                            <a href="teacher-attendance.html" class="btn btn-sm btn-primary">Mark Attendance</a>
+                        </div>
+
+                        <div class="file-item" style="border-left: 4px solid var(--primary-main);">
+                            <div class="file-icon">🎤</div>
+                            <div class="file-info">
+                                <div class="file-name">Singing Group</div>
+                                <div class="file-meta">5:30 PM - 6:30 PM • Studio B, Room 2</div>
+                                <div class="file-meta">15 students enrolled</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline">View Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid" style="gap: var(--spacing-md);">
+                        <a href="teacher-attendance.html" class="btn btn-primary w-full">
+                            ✓ Mark Today's Attendance
+                        </a>
+                        <a href="teacher-file-upload.html" class="btn btn-outline w-full">
+                            📤 Upload Class Materials
+                        </a>
+                        <button class="btn btn-outline w-full">
+                            📧 Email All Parents
+                        </button>
+                        <button class="btn btn-outline w-full">
+                            📊 View Attendance Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All School Lessons (Full Access) -->
+        <div class="card mt-lg">
+            <div class="card-header">
+                <h3 class="card-title">🏫 All School Lessons (Full Access)</h3>
+                <div class="flex-gap">
+                    <button class="btn btn-text btn-sm">Filter by Teacher</button>
+                    <button class="btn btn-text btn-sm">Filter by Day</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-md">You have full access to view and manage ALL lessons for coverage support</p>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Teacher</th>
+                                <th>Schedule</th>
+                                <th>Students</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: var(--primary-light);">
+                                <td>
+                                    <strong>Piano Foundation 1</strong><br>
+                                    <span class="badge badge-primary">My Class</span>
+                                </td>
+                                <td>Ms. Johnson</td>
+                                <td>Mon 4:00 PM • Studio A</td>
+                                <td>12</td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-primary">Mark Attendance</button>
+                                        <button class="btn btn-sm btn-outline">View Students</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Guitar Intermediate</strong></td>
+                                <td>Mr. Williams</td>
+                                <td>Tue 5:00 PM • Studio B</td>
+                                <td>8</td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline">Mark Attendance</button>
+                                        <button class="btn btn-sm btn-outline">View Students</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Drums Beginner</strong></td>
+                                <td>Ms. Chen</td>
+                                <td>Wed 3:30 PM • Studio A</td>
+                                <td>6</td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline">Mark Attendance</button>
+                                        <button class="btn btn-sm btn-outline">View Students</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="background: var(--primary-light);">
+                                <td>
+                                    <strong>Singing Group</strong><br>
+                                    <span class="badge badge-primary">My Class</span>
+                                </td>
+                                <td>Ms. Johnson</td>
+                                <td>Thu 4:00 PM • Studio B</td>
+                                <td>15</td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-primary">Mark Attendance</button>
+                                        <button class="btn btn-sm btn-outline">View Students</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent File Uploads -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">📁 My Recent Uploads</h3>
+                <a href="teacher-file-upload.html" class="btn btn-sm btn-primary">Upload New File</a>
+            </div>
+            <div class="card-body">
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name">Für Elise - Sheet Music.pdf</div>
+                            <div class="file-meta">Piano Foundation 1 • Uploaded Today • <span class="badge badge-success">✓ Synced to Drive</span></div>
+                        </div>
+                        <button class="btn btn-sm btn-outline">Edit</button>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-info">
+                            <div class="file-name">Für Elise - Backing Track.mp3</div>
+                            <div class="file-meta">Piano Foundation 1 • Uploaded Today • <span class="badge badge-success">✓ Synced to Drive</span></div>
+                        </div>
+                        <button class="btn btn-sm btn-outline">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

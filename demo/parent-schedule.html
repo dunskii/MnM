@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Schedule - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .schedule-day {
+            background: var(--bg-default);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-md);
+        }
+        .schedule-day.today {
+            border: 2px solid var(--primary-main);
+            background: var(--primary-light);
+        }
+        .lesson-card {
+            background: white;
+            border-left: 4px solid var(--primary-main);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .lesson-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+        .lesson-card:last-child {
+            margin-bottom: 0;
+        }
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="parent-dashboard.html">Dashboard</a>
+                    <a href="parent-schedule.html" class="active">Schedule</a>
+                    <a href="parent-payments.html">Payments</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">SS</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Sarah Smith</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Parent</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="page-title">
+            <h1>Family Schedule</h1>
+            <p class="text-muted">View all your children's lessons and activities</p>
+        </div>
+
+        <!-- Filter & View Options -->
+        <div class="card">
+            <div class="card-body">
+                <div class="grid grid-3">
+                    <div class="form-group mb-0">
+                        <label class="form-label">View</label>
+                        <select class="form-select">
+                            <option value="week" selected>This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="term">This Term</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Filter by Child</label>
+                        <select class="form-select">
+                            <option value="all" selected>All Children</option>
+                            <option value="emma">Emma Smith</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Filter by Location</label>
+                        <select class="form-select">
+                            <option value="all" selected>All Locations</option>
+                            <option value="studio-a">Studio A</option>
+                            <option value="studio-b">Studio B</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Week Navigation -->
+        <div class="month-nav">
+            <button class="btn btn-outline">← Previous Week</button>
+            <h3 style="margin: 0;">Week of January 20-26, 2025</h3>
+            <button class="btn btn-outline">Next Week →</button>
+        </div>
+
+        <!-- Monday -->
+        <div class="schedule-day today">
+            <div class="flex-between mb-md">
+                <div>
+                    <h3 style="margin: 0;">Monday, January 20</h3>
+                    <span class="badge badge-primary">Today</span>
+                </div>
+                <div class="text-muted">1 lesson</div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="flex-between mb-sm">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.125rem;">Piano Foundation 1</h4>
+                        <div class="text-muted" style="font-size: 0.875rem;">Group Lesson</div>
+                    </div>
+                    <span class="badge badge-warning">In 2 hours</span>
+                </div>
+
+                <div class="grid grid-2" style="gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Time</div>
+                        <strong>4:00 PM - 5:00 PM</strong>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Student</div>
+                        <strong>Emma Smith</strong>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Teacher</div>
+                        <strong>Ms. Johnson</strong>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Location</div>
+                        <strong>Studio A, Room 1</strong><br>
+                        <a href="#" style="font-size: 0.875rem;">Get Directions</a>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="flex-between">
+                    <button class="btn btn-text btn-sm">📧 Email Teacher</button>
+                    <button class="btn btn-outline btn-sm">📅 Add to Calendar</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Upcoming Weeks Preview -->
+        <div class="card mt-lg">
+            <div class="card-header">
+                <h3 class="card-title">Upcoming Lessons (Next 4 Weeks)</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Lesson</th>
+                                <th>Student</th>
+                                <th>Teacher</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Mon, Jan 27</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">4:00 PM</span>
+                                </td>
+                                <td>Piano Foundation 1</td>
+                                <td>Emma Smith</td>
+                                <td>Ms. Johnson</td>
+                                <td>Studio A, Room 1</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Mon, Feb 3</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">4:00 PM</span>
+                                </td>
+                                <td>Piano Foundation 1</td>
+                                <td>Emma Smith</td>
+                                <td>Ms. Johnson</td>
+                                <td>Studio A, Room 1</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Mon, Feb 10</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">4:00 PM</span>
+                                </td>
+                                <td>Piano Foundation 1</td>
+                                <td>Emma Smith</td>
+                                <td>Ms. Johnson</td>
+                                <td>Studio A, Room 1</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Mon, Feb 17</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">4:00 PM</span>
+                                </td>
+                                <td>Piano Foundation 1</td>
+                                <td>Emma Smith</td>
+                                <td>Ms. Johnson</td>
+                                <td>Studio A, Room 1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Subscription -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">📅 Subscribe to Calendar</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Add your family's lessons to your personal calendar app (Google Calendar, Apple Calendar, Outlook, etc.)</p>
+
+                <div class="alert alert-info mt-md">
+                    <strong>How it works:</strong> Click the button below to get your personal calendar link. Add this link to your calendar app and all your children's lessons will automatically appear and stay updated.
+                </div>
+
+                <div class="flex-gap mt-lg">
+                    <button class="btn btn-primary">
+                        📱 Get Calendar Link
+                    </button>
+                    <button class="btn btn-outline">
+                        📧 Email Calendar Link
+                    </button>
+                </div>
+
+                <div class="divider"></div>
+
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                    <strong>Supported calendar apps:</strong> Google Calendar, Apple Calendar, Microsoft Outlook, Yahoo Calendar, and any app that supports iCal format
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

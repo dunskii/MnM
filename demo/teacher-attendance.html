@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracking - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .attendance-grid {
+            display: grid;
+            gap: var(--spacing-sm);
+        }
+        .student-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg-paper);
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s ease;
+        }
+        .student-row:hover {
+            background: var(--bg-hover);
+        }
+        .student-row.present {
+            background: #c8e6c9;
+            border-left: 4px solid var(--success-main);
+        }
+        .student-row.absent {
+            background: #ffcdd2;
+            border-left: 4px solid var(--error-main);
+        }
+        .attendance-toggle {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        .toggle-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        .toggle-btn.active-present {
+            background: var(--success-main);
+            color: white;
+            border-color: var(--success-main);
+        }
+        .toggle-btn.active-absent {
+            background: var(--error-main);
+            color: white;
+            border-color: var(--error-main);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="teacher-dashboard.html">Dashboard</a>
+                    <a href="teacher-file-upload.html">Upload Files</a>
+                    <a href="teacher-attendance.html" class="active">Attendance</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">MJ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Ms. Johnson</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Teacher</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="page-title">
+            <h1>Attendance Tracking</h1>
+            <p class="text-muted">Mark attendance for today's lessons</p>
+        </div>
+
+        <!-- Select Lesson -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Select Lesson</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Today's Lessons</label>
+                    <select class="form-select" onchange="selectLesson(this.value)">
+                        <option value="">Choose a lesson</option>
+                        <option value="piano-1" selected>Piano Foundation 1 - 4:00 PM (12 students)</option>
+                        <option value="singing">Singing Group - 5:30 PM (15 students)</option>
+                    </select>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>📅 Selected:</strong> Piano Foundation 1 • Monday, Jan 20, 2025 at 4:00 PM • Studio A, Room 1
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-body">
+                <div class="flex-between">
+                    <h4 style="margin: 0;">Quick Actions</h4>
+                    <div class="flex-gap">
+                        <button class="btn btn-outline btn-sm" onclick="markAllPresent()">✓ Mark All Present</button>
+                        <button class="btn btn-outline btn-sm" onclick="markAllAbsent()">✗ Mark All Absent</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Student Attendance (12 students)</h3>
+                <span class="badge badge-warning">Not yet submitted</span>
+            </div>
+            <div class="card-body">
+                <div class="attendance-grid">
+                    <div class="student-row present" id="student-1">
+                        <div>
+                            <div style="font-weight: 600;">Emma Smith</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">7 years old • Parent: Sarah Smith</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn active-present" onclick="markPresent(1)">✓ Present</button>
+                            <button class="toggle-btn" onclick="markAbsent(1)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="toggleNotes(1)">Add Note</button>
+                    </div>
+
+                    <div class="student-row present" id="student-2">
+                        <div>
+                            <div style="font-weight: 600;">Oliver Brown</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">8 years old • Parent: Michael Brown</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn active-present" onclick="markPresent(2)">✓ Present</button>
+                            <button class="toggle-btn" onclick="markAbsent(2)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="toggleNotes(2)">Add Note</button>
+                    </div>
+
+                    <div class="student-row absent" id="student-3">
+                        <div>
+                            <div style="font-weight: 600;">Sophia Lee</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">6 years old • Parent: Jennifer Lee</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn" onclick="markPresent(3)">✓ Present</button>
+                            <button class="toggle-btn active-absent" onclick="markAbsent(3)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="toggleNotes(3)">Add Note ⚠</button>
+                    </div>
+
+                    <!-- Notes section for Sophia (shown when absent) -->
+                    <div id="notes-3" style="grid-column: 1 / -1; display: block; margin-top: calc(-1 * var(--spacing-sm));">
+                        <div style="background: #fff3e0; padding: var(--spacing-md); border-radius: var(--border-radius); border-left: 4px solid var(--warning-main);">
+                            <div class="form-group mb-sm">
+                                <label class="form-label">Absence Reason</label>
+                                <select class="form-select">
+                                    <option value="">Select reason</option>
+                                    <option value="sick" selected>Sick</option>
+                                    <option value="holiday">Holiday</option>
+                                    <option value="school">School Event</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Additional Notes (Optional)</label>
+                                <textarea class="form-textarea" rows="2" placeholder="Any additional details...">Parent called - Sophia has a cold. Will return next week.</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-row present" id="student-4">
+                        <div>
+                            <div style="font-weight: 600;">Liam Wilson</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">8 years old • Parent: David Wilson</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn active-present" onclick="markPresent(4)">✓ Present</button>
+                            <button class="toggle-btn" onclick="markAbsent(4)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="toggleNotes(4)">Add Note</button>
+                    </div>
+
+                    <div class="student-row present" id="student-5">
+                        <div>
+                            <div style="font-weight: 600;">Ava Martinez</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">7 years old • Parent: Maria Martinez</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn active-present" onclick="markPresent(5)">✓ Present</button>
+                            <button class="toggle-btn" onclick="markAbsent(5)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="toggleNotes(5)">Add Note</button>
+                    </div>
+
+                    <div class="student-row present" id="student-6">
+                        <div>
+                            <div style="font-weight: 600;">Noah Chen</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">9 years old • Parent: Lisa Chen</div>
+                        </div>
+                        <div class="attendance-toggle">
+                            <button class="toggle-btn active-present" onclick="markPresent(6)">✓ Present</button>
+                            <button class="toggle-btn" onclick="markAbsent(6)">✗ Absent</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="toggleNotes(6)">Add Note</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Summary -->
+                <div class="grid grid-3 mb-lg">
+                    <div style="text-align: center; padding: var(--spacing-md); background: #c8e6c9; border-radius: var(--border-radius);">
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--success-main);">11</div>
+                        <div class="text-muted">Present</div>
+                    </div>
+                    <div style="text-align: center; padding: var(--spacing-md); background: #ffcdd2; border-radius: var(--border-radius);">
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--error-main);">1</div>
+                        <div class="text-muted">Absent</div>
+                    </div>
+                    <div style="text-align: center; padding: var(--spacing-md); background: var(--bg-paper); border-radius: var(--border-radius);">
+                        <div style="font-size: 2rem; font-weight: 700;">92%</div>
+                        <div class="text-muted">Attendance Rate</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>⚠ Absent Students:</strong> Parents will be automatically notified via email when you submit attendance.
+                </div>
+
+                <div class="flex-between mt-lg">
+                    <button class="btn btn-outline">Cancel</button>
+                    <button class="btn btn-primary btn-lg" onclick="submitAttendance()">
+                        Submit Attendance →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance History -->
+        <div class="card mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Recent Attendance History</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Lesson</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Rate</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Jan 13, 2025</strong></td>
+                                <td>Piano Foundation 1</td>
+                                <td><span class="badge badge-success">12</span></td>
+                                <td><span class="badge badge-secondary">0</span></td>
+                                <td><strong>100%</strong></td>
+                                <td><button class="btn btn-sm btn-outline">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jan 6, 2025</strong></td>
+                                <td>Piano Foundation 1</td>
+                                <td><span class="badge badge-success">11</span></td>
+                                <td><span class="badge badge-error">1</span></td>
+                                <td><strong>92%</strong></td>
+                                <td><button class="btn btn-sm btn-outline">View Details</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function markPresent(id) {
+            const row = document.getElementById('student-' + id);
+            row.className = 'student-row present';
+            row.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active-present', 'active-absent'));
+            row.querySelector('.toggle-btn:first-of-type').classList.add('active-present');
+            const notes = document.getElementById('notes-' + id);
+            if (notes) notes.style.display = 'none';
+        }
+
+        function markAbsent(id) {
+            const row = document.getElementById('student-' + id);
+            row.className = 'student-row absent';
+            row.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active-present', 'active-absent'));
+            row.querySelector('.toggle-btn:last-of-type').classList.add('active-absent');
+        }
+
+        function toggleNotes(id) {
+            const notes = document.getElementById('notes-' + id);
+            if (notes) {
+                notes.style.display = notes.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function markAllPresent() {
+            for (let i = 1; i <= 6; i++) {
+                markPresent(i);
+            }
+        }
+
+        function markAllAbsent() {
+            for (let i = 1; i <= 6; i++) {
+                markAbsent(i);
+            }
+        }
+
+        function selectLesson(value) {
+            if (value) {
+                alert('Lesson selected! In the real system, this would load the student roster for that lesson.');
+            }
+        }
+
+        function submitAttendance() {
+            alert('Attendance submitted successfully!\n\n✓ 11 students marked present\n✓ 1 student marked absent\n✓ Parent Jennifer Lee notified about Sophia\'s absence\n✓ Attendance record saved\n\nAll parents can now view attendance in their portal.');
+            window.location.href = 'teacher-dashboard.html';
+        }
+    </script>
+</body>
+</html>

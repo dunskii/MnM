@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+        }
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+        .role-option {
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-option:hover {
+            border-color: var(--primary-main);
+            background: var(--bg-hover);
+        }
+        .role-option.selected {
+            border-color: var(--primary-main);
+            background: var(--primary-main);
+            color: var(--text-white);
+        }
+        .role-icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: var(--spacing-xs);
+        }
+        .role-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="meet-and-greet.html">Book a Meet & Greet</a>
+                    <a href="index.html">← Back to Demo Index</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-container">
+        <div class="container-sm">
+            <div class="card login-card">
+                <div class="card-header text-center">
+                    <h2 class="card-title">Welcome Back</h2>
+                    <p class="text-muted">Sign in to access your portal</p>
+                </div>
+                <div class="card-body">
+                    <!-- Demo Role Selector -->
+                    <div class="alert alert-info mb-lg">
+                        <strong>Demo Mode:</strong> Select a role to view that dashboard
+                    </div>
+
+                    <div class="role-selector">
+                        <div class="role-option selected" data-role="admin">
+                            <span class="role-icon">👔</span>
+                            <span class="role-label">Admin</span>
+                        </div>
+                        <div class="role-option" data-role="teacher">
+                            <span class="role-icon">👩‍🏫</span>
+                            <span class="role-label">Teacher</span>
+                        </div>
+                        <div class="role-option" data-role="parent">
+                            <span class="role-icon">👨‍👩‍👧</span>
+                            <span class="role-label">Parent</span>
+                        </div>
+                        <div class="role-option" data-role="student">
+                            <span class="role-icon">🎵</span>
+                            <span class="role-label">Student</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" id="email" value="admin@musicnme.com.au" placeholder="your.email@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" value="••••••••" placeholder="Enter password">
+                    </div>
+
+                    <div class="flex-between mb-lg">
+                        <label style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer;">
+                            <input type="checkbox" checked>
+                            <span style="font-size: 0.875rem;">Remember me</span>
+                        </label>
+                        <a href="#" style="font-size: 0.875rem;">Forgot password?</a>
+                    </div>
+
+                    <button class="btn btn-primary w-full btn-lg" onclick="login()">
+                        Sign In
+                    </button>
+
+                    <div class="divider"></div>
+
+                    <p class="text-center text-muted">
+                        New to Music 'n Me?
+                        <a href="meet-and-greet.html">Book a meet & greet</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = 'admin';
+
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedRole = this.dataset.role;
+
+                // Update email placeholder based on role
+                const emailInput = document.getElementById('email');
+                const emails = {
+                    admin: 'admin@musicnme.com.au',
+                    teacher: 'teacher@musicnme.com.au',
+                    parent: 'sarah.smith@example.com',
+                    student: 'emma.smith@example.com'
+                };
+                emailInput.value = emails[selectedRole];
+            });
+        });
+
+        function login() {
+            const dashboards = {
+                admin: 'admin-dashboard.html',
+                teacher: 'teacher-dashboard.html',
+                parent: 'parent-dashboard.html',
+                student: 'student-dashboard.html'
+            };
+            window.location.href = dashboards[selectedRole];
+        }
+    </script>
+</body>
+</html>

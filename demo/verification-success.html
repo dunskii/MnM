@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: var(--success-main);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: var(--text-white);
+            margin: 0 auto var(--spacing-xl);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-content {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: var(--spacing-xl) 0;
+        }
+
+        .details-card {
+            text-align: left;
+            margin-top: var(--spacing-xl);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="index.html">← Back to Demo Index</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-sm" style="margin-top: var(--spacing-xl);">
+        <div class="success-content">
+            <div class="success-icon">✓</div>
+
+            <h1>Email Verified Successfully!</h1>
+            <p class="text-muted" style="font-size: 1.125rem;">Your meet & greet booking has been confirmed.</p>
+
+            <div class="card details-card">
+                <div class="card-header">
+                    <h3 class="card-title">Booking Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid" style="gap: var(--spacing-md);">
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Parent</div>
+                            <strong>Sarah Smith</strong>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Child</div>
+                            <strong>Emma (7 years old)</strong>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Instrument</div>
+                            <strong>Piano</strong>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="grid grid-2" style="gap: var(--spacing-md);">
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Date & Time</div>
+                            <strong>Wednesday, January 17, 2025</strong><br>
+                            <strong>10:00 AM - 10:15 AM</strong>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Location</div>
+                            <strong>Studio A</strong><br>
+                            <span class="text-muted" style="font-size: 0.875rem;">123 Music Street, Sydney</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Teacher</div>
+                        <strong>Ms. Johnson</strong><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">Head Piano Teacher</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-lg">
+                <strong>What Happens Next?</strong>
+                <ul style="margin: var(--spacing-md) 0 0 var(--spacing-lg); text-align: left;">
+                    <li>You'll receive a calendar invitation via email</li>
+                    <li>We'll send you a reminder 24 hours before the session</li>
+                    <li>After the meet & greet, our admin team will follow up</li>
+                    <li>If approved, you'll receive an invitation to create your account</li>
+                </ul>
+            </div>
+
+            <div class="flex-center flex-gap mt-xl">
+                <a href="index.html" class="btn btn-outline">← Back to Demo</a>
+                <a href="admin-meet-and-greet.html" class="btn btn-primary">
+                    View Admin Perspective →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div style="height: var(--spacing-xl);"></div>
+</body>
+</html>

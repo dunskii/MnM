@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Files - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .upload-zone {
+            border: 3px dashed var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary-main);
+            background: var(--bg-hover);
+        }
+        .upload-zone.dragover {
+            border-color: var(--primary-main);
+            background: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="teacher-dashboard.html">Dashboard</a>
+                    <a href="teacher-file-upload.html" class="active">Upload Files</a>
+                    <a href="teacher-attendance.html">Attendance</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">MJ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Ms. Johnson</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Teacher</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title">
+            <h1>Upload Class Resources</h1>
+            <p class="text-muted">Files uploaded here will automatically sync to Google Drive and appear in student portals</p>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>📂 Google Drive Sync Active:</strong> All files uploaded here will be automatically saved to your linked Google Drive folder
+        </div>
+
+        <!-- Upload Form -->
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Select Class or Student</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label required">Upload to:</label>
+                        <select class="form-select">
+                            <option value="">Choose destination</option>
+                            <option value="class">Class Folder</option>
+                            <option value="student">Individual Student</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Select Class</label>
+                        <select class="form-select">
+                            <option value="">Choose a class</option>
+                            <option value="piano-1" selected>Piano Foundation 1 (12 students)</option>
+                            <option value="guitar-int">Guitar Intermediate (8 students)</option>
+                            <option value="singing">Singing Group (15 students)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">File Visibility</label>
+                        <select class="form-select">
+                            <option value="all" selected>Everyone (Students, Parents, Teachers)</option>
+                            <option value="teachers-parents">Teachers & Parents Only</option>
+                            <option value="teachers">Teachers Only</option>
+                        </select>
+                        <span class="form-helper">Controls who can see this file in the portal</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">File Tags</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-sm);">
+                            <label style="display: flex; align-items: center; gap: var(--spacing-xs);">
+                                <input type="checkbox" checked> Sheet Music
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--spacing-xs);">
+                                <input type="checkbox"> Backing Track
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--spacing-xs);">
+                                <input type="checkbox"> Recording
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--spacing-xs);">
+                                <input type="checkbox"> Assignment
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Upload Files</h3>
+                </div>
+                <div class="card-body">
+                    <div class="upload-zone">
+                        <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📤</div>
+                        <h3>Drag & Drop Files Here</h3>
+                        <p class="text-muted">or click to browse</p>
+                        <button class="btn btn-primary mt-md">Choose Files</button>
+                        <p class="text-muted" style="font-size: 0.875rem; margin-top: var(--spacing-md);">
+                            Supported: PDF, MP3, WAV, JPG, PNG • Max 25MB per file
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files to Upload (simulating selected files) -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Files Ready to Upload</h3>
+                <span class="badge badge-primary">2 files</span>
+            </div>
+            <div class="card-body">
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name">Fur-Elise-Sheet-Music.pdf</div>
+                            <div class="file-meta">524 KB • Sheet Music</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline">Remove</button>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-info">
+                            <div class="file-name">Fur-Elise-Backing-Track.mp3</div>
+                            <div class="file-meta">2.1 MB • Backing Track</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline">Remove</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="alert alert-success">
+                    <strong>Upload Destination:</strong><br>
+                    • Portal: Piano Foundation 1 → All 12 students will have access<br>
+                    • Google Drive: "Piano Foundation 1" folder<br>
+                    • Visibility: Everyone (Students, Parents, Teachers)
+                </div>
+
+                <div class="flex-between">
+                    <button class="btn btn-outline">Cancel</button>
+                    <button class="btn btn-primary btn-lg" onclick="uploadFiles()">
+                        Upload Files & Sync to Drive →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Uploads -->
+        <div class="card mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Recently Uploaded Files</h3>
+            </div>
+            <div class="card-body">
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name">Scales-Practice-Week-1.pdf</div>
+                            <div class="file-meta">Piano Foundation 1 • Uploaded 2 days ago • Sheet Music</div>
+                        </div>
+                        <div class="flex-gap">
+                            <span class="badge badge-success">✓ Synced to Drive</span>
+                            <button class="btn btn-sm btn-outline">Edit</button>
+                        </div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-info">
+                            <div class="file-name">Rhythm-Exercise-1.mp3</div>
+                            <div class="file-meta">Piano Foundation 1 • Uploaded 5 days ago • Backing Track</div>
+                        </div>
+                        <div class="flex-gap">
+                            <span class="badge badge-success">✓ Synced to Drive</span>
+                            <button class="btn btn-sm btn-outline">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function uploadFiles() {
+            alert('Files uploaded successfully!\n\n✓ Files saved to portal database\n✓ Files uploaded to Google Drive\n✓ All 12 students in Piano Foundation 1 can now access these files\n\nLet\'s view the student portal to see how files appear...');
+            window.location.href = 'student-dashboard.html';
+        }
+    </script>
+</body>
+</html>

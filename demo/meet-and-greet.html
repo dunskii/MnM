@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Meet & Greet - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
+        }
+
+        @media (max-width: 968px) {
+            .booking-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .time-slot {
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-slot:hover {
+            border-color: var(--primary-main);
+            background: var(--bg-hover);
+        }
+
+        .time-slot.selected {
+            border-color: var(--primary-main);
+            background: var(--primary-main);
+            color: var(--text-white);
+        }
+
+        .time-slot.unavailable {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: var(--bg-paper);
+        }
+
+        .time-slot.unavailable:hover {
+            border-color: var(--border-color);
+            background: var(--bg-paper);
+        }
+
+        .date-picker {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .date-option {
+            padding: var(--spacing-md);
+            text-align: center;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .date-option:hover {
+            border-color: var(--primary-main);
+            background: var(--bg-hover);
+        }
+
+        .date-option.selected {
+            border-color: var(--primary-main);
+            background: var(--primary-main);
+            color: var(--text-white);
+        }
+
+        .date-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .date-day {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .info-box {
+            background: var(--bg-paper);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            border-left: 4px solid var(--primary-main);
+        }
+
+        .info-box h4 {
+            margin-top: 0;
+        }
+
+        .selected-details {
+            background: var(--primary-light);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .selected-details p {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .selected-details p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="index.html">← Back to Demo Index</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="container-sm">
+            <h1>Book a Meet & Greet</h1>
+            <p>Schedule a free 15-minute introductory session. No account required!</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="booking-layout">
+            <!-- Left: Booking Form -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Your Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="bookingForm">
+                            <div class="form-group">
+                                <label class="form-label required">Parent/Guardian Name</label>
+                                <input type="text" class="form-input" id="parentName" placeholder="Sarah Smith" value="Sarah Smith">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Email Address</label>
+                                <input type="email" class="form-input" id="email" placeholder="sarah@example.com" value="sarah.smith@example.com">
+                                <span class="form-helper">We'll send a confirmation email</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Phone Number</label>
+                                <input type="tel" class="form-input" id="phone" placeholder="+61 412 345 678" value="+61 412 345 678">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Child's Name</label>
+                                <input type="text" class="form-input" id="childName" placeholder="Emma" value="Emma">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Child's Age</label>
+                                <input type="number" class="form-input" id="childAge" placeholder="7" value="7" min="1" max="99">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Instrument of Interest</label>
+                                <select class="form-select" id="instrument">
+                                    <option value="">Select an instrument</option>
+                                    <option value="piano" selected>Piano</option>
+                                    <option value="guitar">Guitar</option>
+                                    <option value="drums">Drums</option>
+                                    <option value="singing">Singing</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Additional Notes (Optional)</label>
+                                <textarea class="form-textarea" id="notes" placeholder="Any questions or special requests?"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Date & Time Selection -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Select Date & Time</h3>
+                    </div>
+                    <div class="card-body">
+                        <h4>Available Dates</h4>
+                        <div class="date-picker">
+                            <div class="date-option">
+                                <span class="date-day">Mon</span>
+                                <span class="date-number">15</span>
+                            </div>
+                            <div class="date-option">
+                                <span class="date-day">Tue</span>
+                                <span class="date-number">16</span>
+                            </div>
+                            <div class="date-option selected">
+                                <span class="date-day">Wed</span>
+                                <span class="date-number">17</span>
+                            </div>
+                            <div class="date-option">
+                                <span class="date-day">Thu</span>
+                                <span class="date-number">18</span>
+                            </div>
+                            <div class="date-option">
+                                <span class="date-day">Fri</span>
+                                <span class="date-number">19</span>
+                            </div>
+                            <div class="date-option">
+                                <span class="date-day">Mon</span>
+                                <span class="date-number">22</span>
+                            </div>
+                            <div class="date-option">
+                                <span class="date-day">Tue</span>
+                                <span class="date-number">23</span>
+                            </div>
+                        </div>
+
+                        <h4>Available Time Slots</h4>
+                        <p class="text-muted mb-md" style="font-size: 0.875rem;">Wednesday, January 17, 2025</p>
+
+                        <div class="time-slot">
+                            <div>
+                                <strong>9:00 AM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio A - Ms. Johnson</div>
+                            </div>
+                            <span class="badge badge-success">Available</span>
+                        </div>
+
+                        <div class="time-slot unavailable">
+                            <div>
+                                <strong>9:15 AM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio A - Ms. Johnson</div>
+                            </div>
+                            <span class="badge badge-secondary">Booked</span>
+                        </div>
+
+                        <div class="time-slot">
+                            <div>
+                                <strong>9:30 AM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio A - Ms. Johnson</div>
+                            </div>
+                            <span class="badge badge-success">Available</span>
+                        </div>
+
+                        <div class="time-slot selected">
+                            <div>
+                                <strong>10:00 AM</strong>
+                                <div>Studio A - Ms. Johnson</div>
+                            </div>
+                            <span>✓ Selected</span>
+                        </div>
+
+                        <div class="time-slot">
+                            <div>
+                                <strong>10:15 AM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio A - Ms. Johnson</div>
+                            </div>
+                            <span class="badge badge-success">Available</span>
+                        </div>
+
+                        <div class="time-slot">
+                            <div>
+                                <strong>2:00 PM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio B - Mr. Williams</div>
+                            </div>
+                            <span class="badge badge-success">Available</span>
+                        </div>
+
+                        <div class="time-slot">
+                            <div>
+                                <strong>2:15 PM</strong>
+                                <div class="text-muted" style="font-size: 0.875rem;">Studio B - Mr. Williams</div>
+                            </div>
+                            <span class="badge badge-success">Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary & Submit -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Booking Summary</h3>
+            </div>
+            <div class="card-body">
+                <div class="selected-details">
+                    <p><strong>Parent:</strong> Sarah Smith</p>
+                    <p><strong>Child:</strong> Emma (7 years old)</p>
+                    <p><strong>Instrument:</strong> Piano</p>
+                    <p><strong>Date & Time:</strong> Wednesday, January 17, 2025 at 10:00 AM</p>
+                    <p><strong>Location:</strong> Studio A</p>
+                    <p><strong>Teacher:</strong> Ms. Johnson</p>
+                    <p><strong>Duration:</strong> 15 minutes</p>
+                </div>
+
+                <div class="info-box mb-lg">
+                    <h4>What to Expect</h4>
+                    <ul style="margin-left: var(--spacing-lg);">
+                        <li>You'll receive a confirmation email with a verification link</li>
+                        <li>Please verify your email within 24 hours to confirm this booking</li>
+                        <li>We'll send you a reminder 24 hours before your meet & greet</li>
+                        <li>The session is completely free with no obligation</li>
+                    </ul>
+                </div>
+
+                <div class="flex-between">
+                    <button class="btn btn-outline" onclick="window.history.back()">← Go Back</button>
+                    <button class="btn btn-primary btn-lg" onclick="submitBooking()">
+                        Confirm Booking →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="height: var(--spacing-xl);"></div>
+
+    <script>
+        // Simple form interactivity
+        document.querySelectorAll('.date-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.date-option').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.time-slot:not(.unavailable)').forEach(slot => {
+            slot.addEventListener('click', function() {
+                document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        function submitBooking() {
+            alert('Booking submitted! In the real system, you would receive a verification email.\n\nFor this demo, let\'s proceed to the verification success page.');
+            window.location.href = 'verification-success.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Account - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="index.html">← Back to Demo Index</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="container-sm">
+            <h1>Welcome! Create Your Account</h1>
+            <p>We've pre-filled some details from your meet & greet. Please complete the registration below.</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="alert alert-success">
+            <strong>Great news!</strong> Your meet & greet with Ms. Johnson was approved. Complete your registration to get started.
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Parent/Guardian Information</h3>
+                <span class="text-muted" style="font-size: 0.875rem;">Pre-filled from your meet & greet</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label required">First Name</label>
+                        <input type="text" class="form-input" value="Sarah" disabled style="background: var(--bg-paper);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Last Name</label>
+                        <input type="text" class="form-input" value="Smith" disabled style="background: var(--bg-paper);">
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label required">Email Address</label>
+                        <input type="email" class="form-input" value="sarah.smith@example.com" disabled style="background: var(--bg-paper);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Phone Number</label>
+                        <input type="tel" class="form-input" value="+61 412 345 678" disabled style="background: var(--bg-paper);">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create Password</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label required">Password</label>
+                        <input type="password" class="form-input" placeholder="Enter password">
+                        <span class="form-helper">Minimum 8 characters</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Confirm Password</label>
+                        <input type="password" class="form-input" placeholder="Re-enter password">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Child Information</h3>
+                <span class="text-muted" style="font-size: 0.875rem;">Pre-filled from your meet & greet</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3">
+                    <div class="form-group">
+                        <label class="form-label required">Child's Name</label>
+                        <input type="text" class="form-input" value="Emma" disabled style="background: var(--bg-paper);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Age</label>
+                        <input type="number" class="form-input" value="7" disabled style="background: var(--bg-paper);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-input" value="2018-03-15">
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">School</label>
+                        <input type="text" class="form-input" placeholder="Primary School Name">
+                        <span class="form-helper">Optional</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grade/Year</label>
+                        <input type="text" class="form-input" placeholder="e.g., Year 2">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Medical Notes or Allergies</label>
+                    <textarea class="form-textarea" placeholder="Any medical conditions or allergies we should know about?"></textarea>
+                    <span class="form-helper">Optional but recommended</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Emergency Contact</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label required">Emergency Contact Name</label>
+                        <input type="text" class="form-input" placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Emergency Contact Phone</label>
+                        <input type="tel" class="form-input" placeholder="+61 412 XXX XXX">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Relationship</label>
+                    <select class="form-select">
+                        <option value="">Select relationship</option>
+                        <option value="parent">Parent</option>
+                        <option value="guardian">Guardian</option>
+                        <option value="grandparent">Grandparent</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Additional Children (Optional)</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Do you have more children who want to join? You can add them now or later.</p>
+
+                <button class="btn btn-outline" style="margin-top: var(--spacing-md);">
+                    + Add Another Child
+                </button>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Privacy Notice:</strong> Your information will be kept secure and only used for school administration purposes.
+            View our <a href="#">Privacy Policy</a>.
+        </div>
+
+        <div class="flex-between mb-xl">
+            <a href="verification-success.html" class="btn btn-outline">← Back</a>
+            <button class="btn btn-primary btn-lg" onclick="completeRegistration()">
+                Create Account →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function completeRegistration() {
+            alert('Account created successfully!\n\nIn the real system, the admin would now assign Emma to appropriate classes.\n\nLet\'s view the Admin perspective...');
+            window.location.href = 'admin-class-setup.html';
+        }
+    </script>
+</body>
+</html>

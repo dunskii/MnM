@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="admin-dashboard.html" class="active">Dashboard</a>
+                    <a href="admin-meet-and-greet.html">Meet & Greets</a>
+                    <a href="admin-class-setup.html">Classes</a>
+                    <a href="admin-calendar.html">Calendar</a>
+                    <a href="admin-google-drive.html">Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">AD</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Admin User</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title">
+            <h1>Admin Dashboard</h1>
+            <p class="text-muted">Welcome back! Here's what's happening at Music 'n Me.</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-4 mb-xl">
+            <div class="stat-card">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Pending Meet & Greets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">203</div>
+                <div class="stat-label">Active Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">45</div>
+                <div class="stat-label">Lessons This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">94%</div>
+                <div class="stat-label">Attendance Rate</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Pending Items -->
+        <div class="grid grid-2">
+            <!-- Pending Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⏰ Pending Actions</h3>
+                    <span class="badge badge-warning">5 items</span>
+                </div>
+                <div class="card-body">
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">👋</div>
+                            <div class="file-info">
+                                <div class="file-name">New Meet & Greet - Emma Smith</div>
+                                <div class="file-meta">Piano • Today at 10:00 AM</div>
+                            </div>
+                            <a href="admin-meet-and-greet.html" class="btn btn-sm btn-primary">Review</a>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">💳</div>
+                            <div class="file-info">
+                                <div class="file-name">12 Pending Invoices</div>
+                                <div class="file-meta">Total: $8,450</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline">View</button>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">📧</div>
+                            <div class="file-info">
+                                <div class="file-name">3 Parent Inquiries</div>
+                                <div class="file-meta">Awaiting response</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid" style="gap: var(--spacing-md);">
+                        <a href="admin-class-setup.html" class="btn btn-primary w-full">
+                            + Create New Lesson
+                        </a>
+                        <a href="admin-meet-and-greet.html" class="btn btn-outline w-full">
+                            📅 Manage Meet & Greets
+                        </a>
+                        <button class="btn btn-outline w-full">
+                            📧 Send Group Email
+                        </button>
+                        <button class="btn btn-outline w-full">
+                            💰 Generate Term Invoices
+                        </button>
+                        <a href="admin-google-drive.html" class="btn btn-outline w-full">
+                            💾 Sync Google Drive
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Upcoming -->
+        <div class="grid grid-2 mt-lg">
+            <!-- This Week's Lessons -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📚 This Week's Lessons</h3>
+                    <a href="admin-calendar.html" class="btn btn-text btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Lesson</th>
+                                    <th>Teacher</th>
+                                    <th>Students</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Piano Foundation 1</strong></td>
+                                    <td>Ms. Johnson</td>
+                                    <td>12</td>
+                                    <td>Mon 4:00 PM</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Guitar Intermediate</strong></td>
+                                    <td>Mr. Williams</td>
+                                    <td>8</td>
+                                    <td>Tue 5:00 PM</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Drums Beginner</strong></td>
+                                    <td>Ms. Chen</td>
+                                    <td>6</td>
+                                    <td>Wed 3:30 PM</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Singing Group</strong></td>
+                                    <td>Ms. Johnson</td>
+                                    <td>15</td>
+                                    <td>Thu 4:00 PM</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💰 Payment Summary</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-2 mb-lg">
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem;">This Term</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--success-main);">$125,450</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">+12% from last term</div>
+                        </div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.875rem;">Outstanding</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--warning-main);">$8,450</div>
+                            <div class="text-muted" style="font-size: 0.875rem;">12 unpaid invoices</div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-md);">Recent Payments</h4>
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">Sarah Smith</div>
+                                <div class="file-meta">Paid $695 • 2 hours ago</div>
+                            </div>
+                            <span class="badge badge-success">Stripe</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">John Williams</div>
+                                <div class="file-meta">Paid $520 • 5 hours ago</div>
+                            </div>
+                            <span class="badge badge-secondary">Bank Transfer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Drive Sync Status -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">💾 Google Drive Sync Status</h3>
+                <span class="badge badge-success">Synced 5 mins ago</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-4">
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem;">Total Files</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">247</div>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem;">Synced Today</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">12</div>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem;">Class Folders</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">28</div>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem;">Student Folders</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">203</div>
+                    </div>
+                </div>
+                <a href="admin-google-drive.html" class="btn btn-primary mt-md">Manage Folders →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

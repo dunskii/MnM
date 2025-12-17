@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet & Greet Management - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="admin-dashboard.html">Dashboard</a>
+                    <a href="admin-meet-and-greet.html" class="active">Meet & Greets</a>
+                    <a href="admin-class-setup.html">Classes</a>
+                    <a href="admin-calendar.html">Calendar</a>
+                    <a href="admin-google-drive.html">Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">AD</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Admin User</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title flex-between">
+            <div>
+                <h1>Meet & Greet Management</h1>
+                <p class="text-muted">Review bookings, approve parents, and send registration invitations</p>
+            </div>
+            <a href="meet-and-greet.html" class="btn btn-outline">View Public Booking Page →</a>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="card">
+            <div class="card-body" style="padding: var(--spacing-md);">
+                <div class="flex-gap">
+                    <button class="btn btn-primary btn-sm">All (8)</button>
+                    <button class="btn btn-text btn-sm">Pending (3)</button>
+                    <button class="btn btn-text btn-sm">Confirmed (2)</button>
+                    <button class="btn btn-text btn-sm">Completed (2)</button>
+                    <button class="btn btn-text btn-sm">Approved (1)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Bookings</h3>
+                <button class="btn btn-sm btn-outline">Export CSV</button>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Parent</th>
+                                <th>Child</th>
+                                <th>Instrument</th>
+                                <th>Date & Time</th>
+                                <th>Teacher</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Sarah Smith</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">sarah.smith@example.com</span>
+                                </td>
+                                <td>Emma (7)</td>
+                                <td>Piano</td>
+                                <td>
+                                    <strong>Jan 17, 2025</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">10:00 AM</span>
+                                </td>
+                                <td>Ms. Johnson</td>
+                                <td><span class="badge badge-success">Completed</span></td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm" onclick="approveMeetAndGreet()">
+                                        Approve & Send Invitation
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Michael Brown</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">mbrown@example.com</span>
+                                </td>
+                                <td>Oliver (9)</td>
+                                <td>Guitar</td>
+                                <td>
+                                    <strong>Jan 18, 2025</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">2:00 PM</span>
+                                </td>
+                                <td>Mr. Williams</td>
+                                <td><span class="badge badge-primary">Confirmed</span></td>
+                                <td>
+                                    <button class="btn btn-outline btn-sm">View Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Jennifer Lee</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">jlee@example.com</span>
+                                </td>
+                                <td>Sophia (6)</td>
+                                <td>Piano</td>
+                                <td>
+                                    <strong>Jan 19, 2025</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">9:30 AM</span>
+                                </td>
+                                <td>Ms. Johnson</td>
+                                <td><span class="badge badge-primary">Confirmed</span></td>
+                                <td>
+                                    <button class="btn btn-outline btn-sm">View Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>David Wilson</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">dwilson@example.com</span>
+                                </td>
+                                <td>Liam (8)</td>
+                                <td>Drums</td>
+                                <td>
+                                    <strong>Jan 20, 2025</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">3:00 PM</span>
+                                </td>
+                                <td>Ms. Chen</td>
+                                <td><span class="badge badge-warning">Pending Verification</span></td>
+                                <td>
+                                    <button class="btn btn-outline btn-sm">Resend Email</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meet & Greet Detail Modal (shown when clicking a booking) -->
+        <div class="card mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Booking Details: Sarah Smith</h3>
+                <span class="badge badge-success">Completed</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3 mb-lg">
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Parent Information</div>
+                        <strong>Sarah Smith</strong><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">sarah.smith@example.com</span><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">+61 412 345 678</span>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Child Information</div>
+                        <strong>Emma</strong><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">7 years old</span><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">Instrument: Piano</span>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.875rem; margin-bottom: 4px;">Meeting Details</div>
+                        <strong>Wednesday, Jan 17, 2025</strong><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">10:00 AM - 10:15 AM</span><br>
+                        <span class="text-muted" style="font-size: 0.875rem;">Studio A • Ms. Johnson</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teacher Notes</label>
+                    <textarea class="form-textarea" placeholder="Add notes about the meet & greet...">Emma showed great enthusiasm for piano! She has some prior experience from school music class. Recommended for Piano Foundation 1 group class. Parent Sarah is very engaged and supportive.</textarea>
+                </div>
+
+                <div class="flex-between mt-lg">
+                    <div class="flex-gap">
+                        <button class="btn btn-outline">Mark as No-Show</button>
+                        <button class="btn btn-outline">Cancel Booking</button>
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="approveMeetAndGreet()">
+                        ✓ Approve & Send Registration Invitation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function approveMeetAndGreet() {
+            alert('Registration invitation sent to Sarah Smith!\n\nThe parent will receive:\n- Email with registration link\n- Pre-filled form with meet & greet data\n- Link expires in 7 days\n\nLet\'s view the registration page...');
+            window.location.href = 'registration.html';
+        }
+    </script>
+</body>
+</html>

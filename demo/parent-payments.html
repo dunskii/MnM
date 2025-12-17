@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments & Invoices - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="parent-dashboard.html">Dashboard</a>
+                    <a href="parent-schedule.html">Schedule</a>
+                    <a href="parent-payments.html" class="active">Payments</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">SS</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Sarah Smith</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Parent</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-md">
+        <div class="page-title">
+            <h1>Payments & Invoices</h1>
+            <p class="text-muted">Manage your family's payments and view invoice history</p>
+        </div>
+
+        <!-- Payment Status Overview -->
+        <div class="grid grid-3 mb-lg">
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--success-main);">$0</div>
+                <div class="stat-label">Outstanding Balance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$695</div>
+                <div class="stat-label">Total Paid This Year</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1</div>
+                <div class="stat-label">Invoices Paid</div>
+            </div>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>✓ All Caught Up!</strong> You have no outstanding invoices. Thank you for your prompt payment!
+        </div>
+
+        <!-- Current Invoices -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Current Invoices</h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center" style="padding: var(--spacing-xl);">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">✓</div>
+                    <h3>No Outstanding Invoices</h3>
+                    <p class="text-muted">Your next invoice will be generated at the end of Term 1</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card mt-lg">
+            <div class="card-header">
+                <h3 class="card-title">Payment History</h3>
+                <button class="btn btn-outline btn-sm">Download All Receipts</button>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Date Paid</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Term 1, 2025</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Invoice #2025-0123</span>
+                                </td>
+                                <td>Jan 15, 2025</td>
+                                <td><strong>$695.00</strong></td>
+                                <td>
+                                    <span class="badge badge-primary">Stripe</span><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Visa •••• 4242</span>
+                                </td>
+                                <td><span class="badge badge-success">Paid</span></td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline" onclick="viewInvoice()">View</button>
+                                        <button class="btn btn-sm btn-outline">Receipt</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Detail Modal -->
+        <div class="card mt-lg">
+            <div class="card-header">
+                <h3 class="card-title">Invoice Details: Term 1, 2025</h3>
+                <span class="badge badge-success">Paid</span>
+            </div>
+            <div class="card-body">
+                <!-- Invoice Header -->
+                <div class="grid grid-2 mb-lg">
+                    <div>
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-sm);">Bill To:</h4>
+                        <strong>Smith Family</strong><br>
+                        <span class="text-muted">Sarah Smith</span><br>
+                        <span class="text-muted">sarah.smith@example.com</span><br>
+                        <span class="text-muted">+61 412 345 678</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <h4 style="font-size: 1rem; margin-bottom: var(--spacing-sm);">Invoice Details:</h4>
+                        <div class="text-muted">Invoice #2025-0123</div>
+                        <div class="text-muted">Issue Date: Jan 1, 2025</div>
+                        <div class="text-muted">Due Date: Jan 31, 2025</div>
+                        <div class="text-muted">Paid: Jan 15, 2025</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Invoice Line Items -->
+                <h4 style="font-size: 1rem; margin-bottom: var(--spacing-md);">Invoice Items</h4>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Student</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Piano Foundation 1</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Group Lessons • Mondays 4:00 PM</span>
+                                </td>
+                                <td>Emma Smith</td>
+                                <td>10 lessons</td>
+                                <td>$35.00</td>
+                                <td><strong>$350.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Piano Method Book Level 1</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Learning materials</span>
+                                </td>
+                                <td>Emma Smith</td>
+                                <td>1</td>
+                                <td>$28.00</td>
+                                <td><strong>$28.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>AMEB Grade 1 Exam Fee</strong><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Exam registration</span>
+                                </td>
+                                <td>Emma Smith</td>
+                                <td>1</td>
+                                <td>$85.00</td>
+                                <td><strong>$85.00</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Invoice Totals -->
+                <div style="max-width: 400px; margin-left: auto;">
+                    <div class="flex-between mb-sm">
+                        <span>Subtotal:</span>
+                        <strong>$463.00</strong>
+                    </div>
+                    <div class="flex-between mb-sm">
+                        <span>GST (10%):</span>
+                        <strong>$46.30</strong>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="flex-between" style="font-size: 1.25rem;">
+                        <strong>Total:</strong>
+                        <strong style="color: var(--primary-main);">$509.30</strong>
+                    </div>
+                    <div class="flex-between mt-md">
+                        <span class="badge badge-success">Paid on Jan 15, 2025</span>
+                        <span>Stripe (Visa •••• 4242)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="card mt-lg mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Payment Methods</h3>
+                <button class="btn btn-primary btn-sm">+ Add Payment Method</button>
+            </div>
+            <div class="card-body">
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-icon">💳</div>
+                        <div class="file-info">
+                            <div class="file-name">Visa ending in 4242</div>
+                            <div class="file-meta">Expires 12/2027 • Default payment method</div>
+                        </div>
+                        <div class="flex-gap">
+                            <span class="badge badge-primary">Default</span>
+                            <button class="btn btn-sm btn-outline">Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="alert alert-info">
+                    <strong>💳 Automatic Payments:</strong> Future invoices will automatically charge your default payment method on the due date.
+                    <a href="#" style="display: block; margin-top: var(--spacing-sm);">Disable automatic payments</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function viewInvoice() {
+            document.querySelector('.card:nth-of-type(5)').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

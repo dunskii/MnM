@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Management - Music 'n Me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .folder-browser {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .folder-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .folder-item:hover {
+            background: var(--bg-hover);
+        }
+        .folder-item.selected {
+            background: var(--primary-light);
+            border: 2px solid var(--primary-main);
+        }
+        .folder-icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Music 'n Me</a>
+                <nav class="nav">
+                    <a href="admin-dashboard.html">Dashboard</a>
+                    <a href="admin-meet-and-greet.html">Meet & Greets</a>
+                    <a href="admin-class-setup.html">Classes</a>
+                    <a href="admin-calendar.html">Calendar</a>
+                    <a href="admin-google-drive.html" class="active">Files</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-avatar">AD</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.875rem;">Admin User</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-title flex-between">
+            <div>
+                <h1>Google Drive Management</h1>
+                <p class="text-muted">Link Google Drive folders to classes and students for seamless file sync</p>
+            </div>
+            <button class="btn btn-primary">
+                🔄 Sync All Folders Now
+            </button>
+        </div>
+
+        <!-- Sync Status -->
+        <div class="alert alert-success">
+            <strong>✓ Connected to Google Drive</strong> • Last synced 5 minutes ago • 247 files synced
+        </div>
+
+        <!-- Link New Folder -->
+        <div class="grid grid-2">
+            <!-- Left: Select Class/Student -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Step 1: Select Class or Student</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">Link folder to:</label>
+                        <select class="form-select" id="linkType">
+                            <option value="class">Class</option>
+                            <option value="student">Individual Student</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Class</label>
+                        <select class="form-select" id="classList">
+                            <option value="">Choose a class</option>
+                            <option value="piano-1" selected>Piano Foundation 1</option>
+                            <option value="guitar-int">Guitar Intermediate</option>
+                            <option value="drums-beg">Drums Beginner</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Selected:</strong> Piano Foundation 1<br>
+                        <span class="text-muted" style="font-size: 0.875rem;">12 students • Ms. Johnson</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Browse Google Drive -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Step 2: Select Google Drive Folder</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">Search Folders</label>
+                        <input type="text" class="form-input" placeholder="Search Google Drive...">
+                    </div>
+
+                    <div class="folder-browser">
+                        <div class="folder-item">
+                            <span class="folder-icon">📁</span>
+                            <div style="flex: 1;">
+                                <strong>Music 'n Me - Classes</strong><br>
+                                <span class="text-muted" style="font-size: 0.875rem;">Modified Jan 10, 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="folder-item selected" style="margin-left: var(--spacing-lg);">
+                            <span class="folder-icon">📂</span>
+                            <div style="flex: 1;">
+                                <strong>Piano Foundation 1</strong><br>
+                                <span class="text-muted" style="font-size: 0.875rem;">18 files • Modified Today</span>
+                            </div>
+                            <span class="badge badge-primary">Selected</span>
+                        </div>
+
+                        <div class="folder-item" style="margin-left: var(--spacing-lg);">
+                            <span class="folder-icon">📂</span>
+                            <div style="flex: 1;">
+                                <strong>Guitar Intermediate</strong><br>
+                                <span class="text-muted" style="font-size: 0.875rem;">12 files • Modified Jan 15, 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="folder-item" style="margin-left: var(--spacing-lg);">
+                            <span class="folder-icon">📂</span>
+                            <div style="flex-size: 1;">
+                                <strong>Drums Beginner</strong><br>
+                                <span class="text-muted" style="font-size: 0.875rem;">8 files • Modified Jan 12, 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="folder-item">
+                            <span class="folder-icon">📁</span>
+                            <div style="flex: 1;">
+                                <strong>Music 'n Me - Students</strong><br>
+                                <span class="text-muted" style="font-size: 0.875rem;">203 subfolders</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-md">
+                        <strong>Selected Folder:</strong> Piano Foundation 1<br>
+                        <span class="text-muted" style="font-size: 0.875rem;">18 files will be synced to the portal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link Button -->
+        <div class="card">
+            <div class="card-body text-center">
+                <h4>Ready to Link</h4>
+                <p class="text-muted">Link "Piano Foundation 1" Google Drive folder to "Piano Foundation 1" class</p>
+                <button class="btn btn-primary btn-lg" onclick="linkFolder()">
+                    🔗 Link Folder & Start Sync
+                </button>
+            </div>
+        </div>
+
+        <!-- Existing Mappings -->
+        <div class="card mb-xl">
+            <div class="card-header">
+                <h3 class="card-title">Existing Folder Mappings</h3>
+                <span class="badge badge-primary">28 Class Folders • 203 Student Folders</span>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Portal Entity</th>
+                                <th>Google Drive Folder</th>
+                                <th>Files</th>
+                                <th>Last Sync</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: var(--primary-light);">
+                                <td>
+                                    <strong>Piano Foundation 1</strong><br>
+                                    <span class="badge badge-primary">Class</span>
+                                </td>
+                                <td>
+                                    <a href="#" class="text-primary">📂 Piano Foundation 1</a><br>
+                                    <span class="text-muted" style="font-size: 0.875rem;">Just linked</span>
+                                </td>
+                                <td><strong>18</strong></td>
+                                <td>
+                                    <span class="text-success">Just now</span>
+                                </td>
+                                <td><span class="badge badge-success">Synced</span></td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline">Sync Now</button>
+                                        <button class="btn btn-sm btn-outline">Unlink</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Guitar Intermediate</strong><br>
+                                    <span class="badge badge-primary">Class</span>
+                                </td>
+                                <td>
+                                    <a href="#" class="text-primary">📂 Guitar Intermediate</a>
+                                </td>
+                                <td><strong>12</strong></td>
+                                <td>5 mins ago</td>
+                                <td><span class="badge badge-success">Synced</span></td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline">Sync Now</button>
+                                        <button class="btn btn-sm btn-outline">Unlink</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Emma Smith</strong><br>
+                                    <span class="badge badge-secondary">Student</span>
+                                </td>
+                                <td>
+                                    <a href="#" class="text-primary">📂 Emma Smith - Piano</a>
+                                </td>
+                                <td><strong>5</strong></td>
+                                <td>5 mins ago</td>
+                                <td><span class="badge badge-success">Synced</span></td>
+                                <td>
+                                    <div class="flex-gap">
+                                        <button class="btn btn-sm btn-outline">Sync Now</button>
+                                        <button class="btn btn-sm btn-outline">Unlink</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function linkFolder() {
+            alert('Google Drive folder linked successfully!\n\n✓ "Piano Foundation 1" folder linked to class\n✓ 18 files synced to portal\n✓ Teachers can now upload files via portal\n✓ Students can access files in their dashboard\n\nLet\'s view the teacher file upload experience...');
+            window.location.href = 'teacher-file-upload.html';
+        }
+    </script>
+</body>
+</html>

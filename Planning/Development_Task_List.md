@@ -53,9 +53,100 @@
 - [ ] Implement POST /auth/login endpoint
 - [ ] Implement POST /auth/refresh endpoint
 - [ ] Implement POST /auth/logout endpoint
-- [ ] Add password strength validation
-- [ ] Add email format validation
 - [ ] Create auth error handling (401, 403 responses)
+
+### 1.3a Password Security (Body Chi Me Implementation)
+**Comprehensive password security with proven production patterns**
+
+#### Password Strength Requirements
+- [ ] Enforce minimum 8 characters
+- [ ] Require at least one uppercase letter (A-Z)
+- [ ] Require at least one lowercase letter (a-z)
+- [ ] Require at least one number (0-9)
+- [ ] Require at least one special character (!@#$%^&*)
+- [ ] Create password strength scoring utility (0-5 scale, minimum 4/5 required)
+- [ ] Add real-time strength indicator display (frontend)
+
+#### Password Security Checks
+- [ ] Create common password detection system (10,000+ database)
+  - [ ] Build password database from SecLists, HIBP, RockYou breach
+  - [ ] Implement O(1) lookup using Set data structure
+  - [ ] Maintain updated common password list
+- [ ] Create personal information detection
+  - [ ] Extract email username and domain
+  - [ ] Extract name parts (first, middle, last)
+  - [ ] Detect phone number sequences
+  - [ ] Detect business/school name in password
+  - [ ] Detect character substitutions (@→a, 3→e, 1→i, 5→s, 0→o, 4→a)
+  - [ ] Block passwords containing personal info variants
+- [ ] Implement Have I Been Pwned (HIBP) integration
+  - [ ] Client-side SHA-1 hashing of password
+  - [ ] Send only first 5 hash characters to API (k-anonymity privacy)
+  - [ ] Validate full hash locally against returned ranges
+  - [ ] Implement 24-hour cache for HIBP checks
+  - [ ] Graceful degradation on API failures
+  - [ ] Severity levels (NONE, LOW, MEDIUM, HIGH, CRITICAL)
+
+#### Password Change Feature
+- [ ] Create POST /auth/change-password endpoint
+- [ ] Verify current password before allowing change
+- [ ] Validate new password against ALL security checks
+- [ ] Prevent reuse of last 5 passwords (password history)
+- [ ] Invalidate all existing sessions on password change
+- [ ] Send confirmation email after password change
+- [ ] Audit log password change event
+- [ ] Create password change form component (frontend)
+  - [ ] Current password field with visibility toggle
+  - [ ] New password field with visibility toggle
+  - [ ] Confirm password field with visibility toggle
+  - [ ] Real-time password strength indicator
+  - [ ] Requirements checklist
+  - [ ] Match validation feedback
+
+#### Rate Limiting for Authentication
+- [ ] Implement rate limiting for failed login attempts
+  - [ ] Track 5 failed attempts per 15-minute sliding window
+  - [ ] Track by both user ID AND IP address
+  - [ ] Enforce 30-minute cooldown after max attempts
+  - [ ] Automatic cleanup of expired attempts
+  - [ ] Clear error messages to prevent timing attacks
+- [ ] Implement rate limiting for password change attempts
+  - [ ] Limit password changes (reasonable frequency, e.g., 1 per 15 min)
+  - [ ] Track by userId
+
+#### Database Schema Updates
+- [ ] Update User model with passwordHistory (JSON field, last 5 hashes)
+- [ ] Add lastPasswordChange timestamp to User model
+- [ ] Create LoginAttempt model for rate limiting
+  - [ ] userId, ipAddress, timestamp, success
+- [ ] Add indexes for rate limiting queries (userId, ipAddress)
+
+#### Testing for Password Security
+- [ ] Unit tests for password strength evaluation
+- [ ] Unit tests for common password detection
+- [ ] Unit tests for personal info detection
+- [ ] Unit tests for password history checking
+- [ ] Unit tests for HIBP integration with mocking
+- [ ] Unit tests for rate limiting logic
+- [ ] Integration tests for complete password change flow
+- [ ] Integration tests for rate limiting enforcement
+- [ ] E2E tests for password change user journey
+- [ ] Multi-tenancy tests (users from different schools)
+- [ ] Test coverage >90% for password security code
+
+#### Accessibility Compliance
+- [ ] Ensure password form complies with WCAG 2.1 AA
+- [ ] Add proper labels and ARIA attributes
+- [ ] Test with screen readers
+- [ ] Ensure proper keyboard navigation
+- [ ] Test color contrast for visibility toggles
+
+#### Documentation
+- [ ] Document password requirements in docs/authentication-and-security.md
+- [ ] Add password change to user guides
+- [ ] Document HIBP privacy model
+- [ ] Document rate limiting behavior
+- [ ] Update CLAUDE.md with password security features
 
 ### 1.4 Multi-Tenancy Foundation
 - [ ] Create school context middleware (extract schoolId from user)

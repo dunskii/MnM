@@ -5,8 +5,22 @@ import { Box, Container, Typography, Button } from '@mui/material';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 
+// Admin Pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import TermsPage from './pages/admin/TermsPage';
+import LocationsPage from './pages/admin/LocationsPage';
+import RoomsPage from './pages/admin/RoomsPage';
+import InstrumentsPage from './pages/admin/InstrumentsPage';
+import LessonTypesPage from './pages/admin/LessonTypesPage';
+import DurationsPage from './pages/admin/DurationsPage';
+import TeachersPage from './pages/admin/TeachersPage';
+import ParentsPage from './pages/admin/ParentsPage';
+import StudentsPage from './pages/admin/StudentsPage';
+import FamiliesPage from './pages/admin/FamiliesPage';
+
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './components/layout/AdminLayout';
 
 // Placeholder pages
 const Home = () => (
@@ -76,6 +90,29 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="locations" element={<LocationsPage />} />
+        <Route path="rooms" element={<RoomsPage />} />
+        <Route path="instruments" element={<InstrumentsPage />} />
+        <Route path="lesson-types" element={<LessonTypesPage />} />
+        <Route path="durations" element={<DurationsPage />} />
+        <Route path="teachers" element={<TeachersPage />} />
+        <Route path="parents" element={<ParentsPage />} />
+        <Route path="students" element={<StudentsPage />} />
+        <Route path="families" element={<FamiliesPage />} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

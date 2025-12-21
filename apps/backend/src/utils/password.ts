@@ -292,3 +292,36 @@ export function getPasswordRequirementsMessage(): string {
 
   return requirements.join(', ');
 }
+
+/**
+ * Generate a secure temporary password for new users
+ * - Excludes ambiguous characters (0, O, l, 1, I)
+ * - Includes uppercase, lowercase, numbers, and special characters
+ * - Meets all password requirements
+ */
+export function generateTemporaryPassword(): string {
+  // Character sets without ambiguous characters
+  const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lowercase = 'abcdefghjkmnpqrstuvwxyz';
+  const numbers = '23456789';
+  const special = '!@#$%^&*';
+
+  // Ensure at least one of each required type
+  let password = '';
+  password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+  password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+  password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  password += special.charAt(Math.floor(Math.random() * special.length));
+
+  // Fill remaining with mixed characters
+  const allChars = uppercase + lowercase + numbers;
+  for (let i = 0; i < 8; i++) {
+    password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+
+  // Shuffle the password to avoid predictable patterns
+  return password
+    .split('')
+    .sort(() => Math.random() - 0.5)
+    .join('');
+}

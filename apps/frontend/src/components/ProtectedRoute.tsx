@@ -10,9 +10,10 @@ import { ReactNode } from 'react';
 interface ProtectedRouteProps {
   children: ReactNode;
   allowedRoles?: Array<'ADMIN' | 'TEACHER' | 'PARENT' | 'STUDENT'>;
+  requiredRole?: 'ADMIN' | 'TEACHER' | 'PARENT' | 'STUDENT';
 }
 
-export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, allowedRoles, requiredRole }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
@@ -38,7 +39,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   }
 
   // Check role-based access
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  const rolesToCheck = allowedRoles || (requiredRole ? [requiredRole] : undefined);
+  if (rolesToCheck && user && !rolesToCheck.includes(user.role)) {
     // Redirect to dashboard if user doesn't have required role
     return <Navigate to="/dashboard" replace />;
   }

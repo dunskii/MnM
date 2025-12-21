@@ -1,0 +1,37 @@
+{
+  "name": "music-n-me",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Music 'n Me - SaaS platform for managing music schools",
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:backend": "npm run dev -w apps/backend",
+    "dev:frontend": "npm run dev -w apps/frontend",
+    "build": "npm run build --workspaces --if-present",
+    "build:backend": "npm run build -w apps/backend",
+    "build:frontend": "npm run build -w apps/frontend",
+    "test": "npm run test --workspaces --if-present",
+    "test:backend": "npm run test -w apps/backend",
+    "test:frontend": "npm run test -w apps/frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:migrate": "npm run db:migrate -w apps/backend",
+    "db:studio": "npm run db:studio -w apps/backend",
+    "db:seed": "npm run db:seed -w apps/backend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "clean": "rimraf node_modules apps/*/node_modules apps/*/dist"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5"
+  }
+}

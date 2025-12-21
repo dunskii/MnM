@@ -22,7 +22,16 @@
 - [ ] Create User model (email, password, role, schoolId)
 - [ ] Create Teacher model (userId, schoolId, instruments)
 - [ ] Create Parent model (userId, schoolId, contacts array)
-- [ ] Create Student model (schoolId, familyId, age group)
+- [ ] Create Student model (schoolId, familyId, birthDate, ageGroup)
+  - [ ] Add birthDate field (required for age calculation)
+  - [ ] Add ageGroup enum (PRESCHOOL, KIDS, TEENS, ADULT)
+  - [ ] Define age group ranges:
+    - PRESCHOOL: 3-5 years (Alice character - Pink)
+    - KIDS: 6-11 years (Steve character - Yellow)
+    - TEENS: 12-17 years (Liam character - Blue)
+    - ADULT: 18+ years (Floyd character - Mint)
+  - [ ] Create utility to calculate ageGroup from birthDate
+  - [ ] Update ageGroup on student birthday (or recalculate on access)
 - [ ] Create Family model (schoolId, primaryParentId)
 - [ ] Create Term model (schoolId, start/end dates, name)
 - [ ] Create Location model (schoolId, name, address)
@@ -32,6 +41,20 @@
 - [ ] Create LessonDuration model (schoolId, minutes)
 - [ ] Create PricingPackage model (schoolId, name, price, items)
 - [ ] Create Lesson model (schoolId, type, termId, teacherId, roomId)
+- [ ] Create HybridLessonPattern model (for HYBRID lesson types)
+  - [ ] lessonId (links to parent Lesson)
+  - [ ] termId (pattern applies per term)
+  - [ ] patternType enum (ALTERNATING, CUSTOM)
+  - [ ] groupWeeks (JSON array of week numbers, e.g., [1,2,3,5,6,7,9,10])
+  - [ ] individualWeeks (JSON array of week numbers, e.g., [4,8])
+  - [ ] individualSlotDuration (minutes, default 30)
+  - [ ] bookingDeadlineHours (default 24)
+- [ ] Create HybridBooking model (individual session bookings by parents)
+  - [ ] lessonId, studentId, parentId
+  - [ ] weekNumber, scheduledDate, startTime, endTime
+  - [ ] status enum (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)
+  - [ ] bookedAt, cancelledAt timestamps
+  - [ ] cancellationReason (optional)
 - [ ] Create LessonEnrollment model (lessonId, studentId)
 - [ ] Create Attendance model (lessonId, studentId, status, date)
 - [ ] Create Note model (schoolId, authorId, studentId?, lessonId?)
@@ -55,7 +78,50 @@
 - [ ] Implement POST /auth/logout endpoint
 - [ ] Create auth error handling (401, 403 responses)
 
-### 1.3a Password Security (Body Chi Me Implementation)
+### 1.3a Password Reset Flow
+**Forgot password functionality for users who cannot log in**
+
+- [ ] Create POST /auth/forgot-password endpoint
+  - [ ] Accept email address
+  - [ ] Validate email exists in system (without revealing if it doesn't - security)
+  - [ ] Generate secure reset token (crypto.randomBytes, 32 bytes)
+  - [ ] Store token hash in database with expiration (1 hour)
+  - [ ] Send password reset email with token link
+- [ ] Create GET /auth/reset-password/:token endpoint
+  - [ ] Validate token exists and not expired
+  - [ ] Return token validity status (for frontend)
+- [ ] Create POST /auth/reset-password endpoint
+  - [ ] Validate token again
+  - [ ] Validate new password against ALL security checks (strength, common, HIBP)
+  - [ ] Hash new password and update user record
+  - [ ] Invalidate reset token after use
+  - [ ] Invalidate all existing sessions (force re-login)
+  - [ ] Send confirmation email (password was reset)
+  - [ ] Audit log password reset event
+- [ ] Rate limit reset requests (prevent email enumeration)
+  - [ ] Max 3 reset requests per email per hour
+  - [ ] Max 10 reset requests per IP per hour
+- [ ] Create forgot password form (frontend)
+  - [ ] Email input field
+  - [ ] Submit button with loading state
+  - [ ] Success message (check your email)
+  - [ ] Error handling
+- [ ] Create reset password form (frontend)
+  - [ ] Token validation on page load
+  - [ ] New password field with visibility toggle
+  - [ ] Confirm password field
+  - [ ] Real-time password strength indicator
+  - [ ] Requirements checklist
+  - [ ] Submit button with loading state
+  - [ ] Success redirect to login
+  - [ ] Expired token error handling
+- [ ] Create password reset email template (HTML + text)
+  - [ ] Brand-compliant design
+  - [ ] Clear call-to-action button
+  - [ ] Token expiration warning (1 hour)
+  - [ ] Security warning (if you didn't request this...)
+
+### 1.3b Password Security (Body Chi Me Implementation)
 **Comprehensive password security with proven production patterns**
 
 #### Password Strength Requirements
@@ -155,7 +221,161 @@
 - [ ] Create test suite for multi-tenancy isolation
 - [ ] Document multi-tenancy patterns for team
 
-### 1.5 Frontend Foundation
+### 1.5 Account Deletion & Data Privacy (GDPR/Privacy Act/COPPA Compliance)
+**See Planning/Account_Deletion_Specification.md for full details**
+
+#### Database Schema for Deletion
+- [ ] Add soft delete fields to User model (deletedAt, deletionRequestedAt, etc.)
+- [ ] Add soft delete fields to Student model
+- [ ] Add soft delete fields to Family model
+- [ ] Create DeletionAuditLog model
+- [ ] Create SchoolRetentionPolicy model
+- [ ] Add indexes for deletion queries
+
+#### Deletion API Endpoints (Backend)
+- [ ] Create GET /users/me/deletion-blockers endpoint
+  - [ ] Check outstanding balance
+  - [ ] Check pending hybrid bookings
+  - [ ] Check active disputes
+  - [ ] Return list of blockers preventing deletion
+- [ ] Create POST /users/me/request-deletion endpoint
+  - [ ] Validate password confirmation
+  - [ ] Check for blockers
+  - [ ] Handle primary vs secondary parent logic
+  - [ ] Create deletion request record
+  - [ ] Send confirmation email
+- [ ] Create POST /users/me/cancel-deletion endpoint
+  - [ ] Validate within grace period
+  - [ ] Restore account status
+  - [ ] Send cancellation confirmation
+- [ ] Create GET /users/me/export endpoint (GDPR data portability)
+  - [ ] Generate JSON/CSV export of all user data
+  - [ ] Include children's data for parents
+  - [ ] Create secure download link (expires in 24h)
+- [ ] Create DELETE /parent/students/:id endpoint
+  - [ ] Parent can delete their own children
+  - [ ] Verify parent owns student
+  - [ ] Handle COPPA requirements (48h processing for under-13)
+
+#### Admin Deletion Endpoints (Backend)
+- [ ] Create GET /admin/deletion-requests endpoint
+  - [ ] List pending deletion requests
+  - [ ] Filter by status (PENDING, APPROVED, REJECTED, COMPLETED)
+- [ ] Create POST /admin/deletion-requests/:id/approve endpoint
+- [ ] Create POST /admin/deletion-requests/:id/reject endpoint
+  - [ ] Require reason for rejection
+- [ ] Create POST /admin/users/:id/restore endpoint
+  - [ ] Restore soft-deleted accounts within grace period
+- [ ] Create DELETE /admin/users/:id endpoint
+  - [ ] Admin-initiated deletion
+  - [ ] Require reason
+- [ ] Create GET /admin/users/:id/export endpoint
+  - [ ] Admin can export any user's data
+- [ ] Create PATCH /admin/school/retention-policy endpoint
+  - [ ] Configure school-specific retention periods
+
+#### Deletion Background Jobs
+- [ ] Create processHardDeletes job (daily at 2 AM)
+  - [ ] Find soft-deleted records past grace period
+  - [ ] Anonymize personal data
+  - [ ] Remove from search indexes
+  - [ ] Delete files from storage
+  - [ ] Create audit log entry
+- [ ] Create sendDeletionReminders job (daily at 9 AM)
+  - [ ] Send reminder at 7 days before hard delete
+  - [ ] Send reminder at 3 days before hard delete
+  - [ ] Send reminder at 1 day before hard delete
+- [ ] Create cleanupAnonymizedData job (weekly)
+  - [ ] Delete teacher notes past retention period
+  - [ ] Delete attendance records past retention period
+- [ ] Create archiveFinancialRecords job (yearly)
+  - [ ] Move old records to cold storage
+
+#### Parent/Guardian Deletion Logic
+- [ ] Implement primary parent deletion flow
+  - [ ] Single parent: Delete entire family
+  - [ ] Two parents: Transfer primary or require confirmation
+- [ ] Implement secondary parent deletion flow
+  - [ ] Unlink from family only
+- [ ] Implement secondary parent confirmation flow
+  - [ ] Send email to secondary parent
+  - [ ] 7-day confirmation window
+  - [ ] Handle timeout (escalate to admin)
+- [ ] Create family cascade deletion logic
+  - [ ] Delete all students
+  - [ ] Anonymize attendance records
+  - [ ] Anonymize invoices/payments
+  - [ ] Delete notes after retention period
+
+#### Deletion Frontend (User)
+- [ ] Create "Delete My Account" page
+  - [ ] Show what will be deleted
+  - [ ] Show what will be retained (anonymized)
+  - [ ] Explain 30-day grace period
+  - [ ] Optional reason selection
+  - [ ] Password confirmation
+  - [ ] Type "DELETE" confirmation
+- [ ] Create "Download My Data" button
+  - [ ] Trigger data export
+  - [ ] Show download link when ready
+- [ ] Create deletion pending banner
+  - [ ] Show on dashboard when deletion pending
+  - [ ] "Cancel Deletion" button
+  - [ ] Show days remaining
+- [ ] Create child deletion interface (for parents)
+  - [ ] Per-child deletion option
+  - [ ] Warning about data loss
+  - [ ] Confirmation flow
+
+#### Deletion Frontend (Admin)
+- [ ] Create Deletion Requests admin page
+  - [ ] List pending requests
+  - [ ] Approve/Reject actions
+  - [ ] View request details
+- [ ] Create user restore functionality
+  - [ ] "Restore Account" button on soft-deleted users
+- [ ] Create retention policy settings page
+  - [ ] Configure financial retention years
+  - [ ] Configure attendance retention years
+  - [ ] Configure teacher notes retention days
+  - [ ] Configure grace period days
+- [ ] Add deletion status to user list
+  - [ ] Show "Pending Deletion" badge
+  - [ ] Show deletion date
+
+#### Deletion Email Templates
+- [ ] Create deletion_request_submitted template
+- [ ] Create deletion_request_approved template
+- [ ] Create deletion_request_rejected template
+- [ ] Create deletion_reminder_7_days template
+- [ ] Create deletion_reminder_3_days template
+- [ ] Create deletion_reminder_1_day template
+- [ ] Create account_deleted_confirmation template
+- [ ] Create deletion_cancelled template
+- [ ] Create secondary_parent_confirmation template
+- [ ] Create child_deleted_notification template
+- [ ] Create data_export_ready template
+
+#### Deletion Testing
+- [ ] Unit tests for deletion blocker checking
+- [ ] Unit tests for anonymization logic
+- [ ] Integration tests for parent deletion flow
+- [ ] Integration tests for family cascade deletion
+- [ ] Integration tests for grace period and hard delete
+- [ ] Test primary→secondary transfer flow
+- [ ] Test secondary parent confirmation flow
+- [ ] Test COPPA 48-hour requirement for under-13
+- [ ] Test data export generation
+- [ ] Test multi-tenancy isolation (user from School A can't delete School B data)
+- [ ] E2E test for complete deletion journey
+
+#### Compliance Documentation
+- [ ] Create user-facing privacy policy section on deletion
+- [ ] Create admin guide for handling deletion requests
+- [ ] Document retention policy configuration
+- [ ] Create compliance checklist for annual review
+
+### 1.6 Frontend Foundation
 - [ ] Install Material-UI v5 and dependencies
 - [ ] Configure MUI theme with brand colors (primary: #4580E4, secondary: #FFCE00)
 - [ ] Add custom fonts (Monkey Mayhem, Avenir with fallbacks)
@@ -178,13 +398,73 @@
 - [ ] Create SendGrid account and get API key
 - [ ] Install SendGrid SDK in backend
 - [ ] Create email service utility class
-- [ ] Create email templates directory
-- [ ] Design Meet & Greet confirmation email template (HTML + text)
-- [ ] Design email verification template
-- [ ] Design welcome email template
+- [ ] Create email templates directory structure
 - [ ] Create send email function with error handling
 - [ ] Add email to queue system (optional: Bull/Redis)
 - [ ] Test email delivery in development
+
+### 2.1a Email Template Design System
+**Brand-compliant email templates with consistent design**
+
+#### Base Template Structure
+- [ ] Create base HTML email template
+  - [ ] Header with Music 'n Me logo
+  - [ ] Brand colors (Primary: #4580E4, Secondary: #FFCE00)
+  - [ ] Avenir font (with web-safe fallbacks)
+  - [ ] Responsive design (mobile-first)
+  - [ ] Footer with school contact info
+  - [ ] Unsubscribe link (CAN-SPAM compliance)
+  - [ ] View in browser link
+- [ ] Create plain text fallback template
+- [ ] Create email component library
+  - [ ] Button component (primary/secondary styles)
+  - [ ] Card component for content sections
+  - [ ] Table component for schedules/invoices
+  - [ ] Alert/warning box component
+
+#### Authentication Emails
+- [ ] Email verification template (Meet & Greet)
+- [ ] Welcome email template (new account created)
+- [ ] Password reset request template
+- [ ] Password reset confirmation template
+- [ ] Password changed notification template
+
+#### Meet & Greet Emails
+- [ ] Booking confirmation template
+- [ ] Admin notification (new booking) template
+- [ ] Approval notification template
+- [ ] Rejection notification template (with reason)
+- [ ] Registration invitation template
+
+#### Lesson & Attendance Emails
+- [ ] Lesson reminder template (24h before)
+- [ ] Lesson cancelled template
+- [ ] Lesson rescheduled template
+- [ ] Weekly attendance summary template (to parents)
+- [ ] Missing notes reminder template (to teachers)
+
+#### Hybrid Booking Emails
+- [ ] Booking confirmation template
+- [ ] Booking cancellation template
+- [ ] Booking rescheduled template
+- [ ] Booking reminder template (24h before)
+- [ ] Available slots reminder template (unbooked weeks)
+
+#### Financial Emails
+- [ ] Invoice sent template (with PDF attachment option)
+- [ ] Payment received/receipt template
+- [ ] Payment failed template
+- [ ] Payment reminder template (upcoming due date)
+- [ ] Overdue invoice template
+
+#### Resource Emails
+- [ ] New resource uploaded template (to students/parents)
+
+#### Email Testing
+- [ ] Test all templates on major email clients (Gmail, Outlook, Apple Mail)
+- [ ] Test mobile rendering
+- [ ] Verify links work correctly
+- [ ] Check spam score (use mail-tester.com)
 
 ### 2.2 Meet & Greet Booking System (Backend)
 - [ ] Create POST /public/meet-and-greet endpoint
@@ -341,6 +621,30 @@
 - [ ] Validate teacher availability (no double-booking)
 - [ ] Filter by schoolId in all queries
 
+### 3.5a Lesson Cancellation Flow (Backend)
+- [ ] Create POST /admin/lessons/:id/occurrences/:date/cancel endpoint
+  - [ ] Cancel single lesson occurrence on specific date
+  - [ ] Update attendance records to CANCELLED status
+  - [ ] Send cancellation notification to enrolled students/parents
+  - [ ] Record cancellation reason
+- [ ] Create POST /admin/lessons/:id/cancel-remaining endpoint
+  - [ ] Cancel all future occurrences from specified date
+  - [ ] Bulk update attendance records
+  - [ ] Send bulk cancellation notification
+  - [ ] Option to specify end date (cancel range)
+- [ ] Create POST /admin/lessons/:id/cancel-series endpoint
+  - [ ] Cancel entire lesson series (all occurrences)
+  - [ ] Remove lesson from active listings
+  - [ ] Notify all enrolled students/parents
+- [ ] Handle cancellation impact on invoices
+  - [ ] Calculate pro-rata refund amount
+  - [ ] Create credit note or adjustment
+  - [ ] Flag for admin review
+- [ ] Create cancellation audit log
+  - [ ] Who cancelled, when, reason
+  - [ ] Students affected
+  - [ ] Financial impact
+
 ### 3.6 Class & Lesson Management (Frontend)
 - [ ] Create Classes list page
 - [ ] Create Add Class/Lesson form
@@ -364,11 +668,40 @@
 - [ ] Display all lessons for selected term
 - [ ] Color-code by lesson type
 - [ ] Show teacher, room, enrolled count on event
-- [ ] Implement drag-and-drop to reschedule
 - [ ] Show day/week/month views
 - [ ] Filter by teacher, room, instrument
 - [ ] Handle HYBRID lesson display (show group vs individual indicator)
 - [ ] Add lesson detail modal on click
+
+### 3.7a Drag-and-Drop Rescheduling (Frontend)
+- [ ] Implement drag-and-drop to reschedule lessons
+- [ ] Define drag validation rules:
+  - [ ] Prevent dragging to past dates
+  - [ ] Validate room availability at new time
+  - [ ] Validate teacher availability at new time
+  - [ ] Check for student enrollment conflicts
+  - [ ] Respect school operating hours
+- [ ] Show real-time conflict indicators during drag
+  - [ ] Red overlay for conflicts
+  - [ ] Green overlay for available slots
+  - [ ] Yellow for warnings (e.g., outside normal hours)
+- [ ] Create confirmation dialog for reschedule
+  - [ ] Show old vs new time/date
+  - [ ] Show affected students count
+  - [ ] Option to notify students/parents
+  - [ ] Reason for reschedule (optional)
+- [ ] Handle room change during drag
+  - [ ] Show available rooms dropdown if dragging to occupied slot
+  - [ ] Validate room capacity for group lessons
+- [ ] Handle teacher change during drag (admin only)
+  - [ ] Show available teachers dropdown
+  - [ ] Validate teacher instrument compatibility
+- [ ] Hybrid lesson specific rules:
+  - [ ] Cannot drag individual booking slots (only parent can reschedule)
+  - [ ] Group weeks can be rescheduled by admin
+  - [ ] Show warning if rescheduling affects booked individual sessions
+- [ ] Send notification emails after confirmed reschedule
+- [ ] Create undo functionality (within 5 minutes)
 
 ### 3.8 Student Enrollment (Backend)
 - [ ] Create GET /admin/students endpoint (list all students)
@@ -404,15 +737,32 @@
 - [ ] Filter by schoolId in all queries
 
 ### 3.11 Teacher Notes (Backend)
+**Policy: Notes are EXPECTED daily but REQUIRED by end of week. Not a hard blocker on attendance.**
+
 - [ ] Create GET /lessons/:id/notes endpoint (class notes)
 - [ ] Create POST /lessons/:id/notes endpoint (add class note)
 - [ ] Create GET /students/:id/notes endpoint (student notes)
 - [ ] Create POST /students/:id/notes endpoint (add student note)
 - [ ] Create PATCH /notes/:id endpoint (update note)
 - [ ] Create DELETE /notes/:id endpoint
-- [ ] Flag required notes (per student AND per class)
-- [ ] Track note completion status
-- [ ] Send reminders for missing notes (weekly deadline)
+- [ ] Track note completion status per lesson occurrence
+  - [ ] noteStatus enum: PENDING, PARTIAL, COMPLETE
+  - [ ] PENDING: No notes added yet
+  - [ ] PARTIAL: Class note OR student notes added (not both)
+  - [ ] COMPLETE: Class note AND all student notes added
+- [ ] Create note deadline tracking
+  - [ ] Deadline: End of week (Sunday 11:59 PM school timezone)
+  - [ ] Grace period: None (deadline is firm)
+  - [ ] Escalation: Admin notified of teachers with overdue notes
+- [ ] Implement weekly reminder system
+  - [ ] Friday 3 PM: Reminder email for incomplete notes
+  - [ ] Sunday 6 PM: Final warning email
+  - [ ] Monday 9 AM: Admin summary of overdue notes
+- [ ] Create GET /admin/notes/overdue endpoint (list overdue notes by teacher)
+- [ ] Create teacher notes dashboard widget (show pending notes count)
+- [ ] Attendance marking is NOT blocked by missing notes
+  - [ ] Show warning "Notes pending" but allow save
+  - [ ] Track attendance and notes separately
 - [ ] Filter by schoolId in all queries
 
 ### 3.12 Teacher Dashboard (Frontend)
@@ -488,6 +838,28 @@
 - [ ] Add mobile-responsive design
 
 ### 4.3 Hybrid Lesson Booking (Backend) ⭐ CORE FEATURE
+
+#### Hybrid Lesson Pricing Formula
+**Must define before implementation:**
+- [ ] Define hybrid lesson pricing model:
+  - [ ] Option A: Single term price (group + individual combined)
+  - [ ] Option B: Split pricing (group weeks rate + individual weeks rate)
+  - [ ] **Recommended:** Option B for transparency
+- [ ] Calculate group weeks cost: (Group rate per session) × (Number of group weeks)
+- [ ] Calculate individual weeks cost: (Individual rate per session) × (Number of individual weeks)
+- [ ] Total term price = Group cost + Individual cost
+- [ ] Handle extra individual session pricing (if parent books additional)
+- [ ] Define cancellation refund policy:
+  - [ ] >48 hours before: Full refund
+  - [ ] 24-48 hours before: 50% refund
+  - [ ] <24 hours before: No refund
+  - [ ] Store as school-configurable settings
+- [ ] Define missed booking deadline policy:
+  - [ ] Parent misses deadline: Slot remains unbooked (no charge for that week)
+  - [ ] OR: Auto-assign to next available slot
+  - [ ] **Recommended:** Slot remains unbooked, send reminder next term
+
+#### Hybrid Booking Endpoints
 - [ ] Create GET /parent/hybrid-lessons endpoint (eligible hybrid lessons)
 - [ ] Create GET /parent/hybrid-lessons/:id/availability endpoint
 - [ ] Design hybrid lesson pattern logic
@@ -782,7 +1154,58 @@
 - [ ] Verify all features working in production
 - [ ] Monitor error logs for first 24 hours
 - [ ] Create support contact method for users
-- [ ] Celebrate launch! 🎉
+- [ ] Celebrate launch!
+
+### 6.9 School-Level Deletion (Multi-Tenant SaaS)
+**Required when selling platform to multiple schools**
+
+#### Super Admin Endpoints
+- [ ] Create DELETE /super-admin/schools/:id endpoint
+  - [ ] Require Super Admin role (platform owner)
+  - [ ] Initiate 30-day notice period
+  - [ ] Make school read-only during notice period
+- [ ] Create GET /super-admin/schools/:id/deletion-status endpoint
+- [ ] Create POST /super-admin/schools/:id/cancel-deletion endpoint
+
+#### School Deletion Notice Period (30 days)
+- [ ] Send school deletion notice to all users (email)
+  - [ ] Include deletion date
+  - [ ] Instructions to export data
+  - [ ] Contact info for questions
+- [ ] Create "School Deletion Pending" banner for all users
+- [ ] Disable new enrollments during notice period
+- [ ] Disable new payments during notice period
+- [ ] Allow data exports during notice period
+
+#### School Data Export
+- [ ] Create GET /admin/school/export endpoint
+  - [ ] Export all students (CSV)
+  - [ ] Export all families (CSV)
+  - [ ] Export all attendance records (CSV)
+  - [ ] Export all invoices and payments (CSV)
+  - [ ] Export all teacher notes (CSV)
+  - [ ] Export all resources (ZIP)
+- [ ] Generate secure download link (expires in 7 days)
+- [ ] Notify admin when export is ready
+
+#### School Hard Deletion (After 60 days total)
+- [ ] Create processSchoolHardDelete job
+  - [ ] Soft delete all users at 30 days
+  - [ ] Hard delete all personal data at 60 days
+  - [ ] Anonymize and archive financial records
+  - [ ] Delete all files from storage
+  - [ ] Remove school from active tenants
+  - [ ] Create final audit log
+- [ ] Archive anonymized financial records to cold storage
+- [ ] Retain audit logs for 7 years minimum
+
+#### School Deletion Testing
+- [ ] Test school deletion notice flow
+- [ ] Test data export for school
+- [ ] Test school read-only mode
+- [ ] Test cascade deletion of all school data
+- [ ] Test financial record archiving
+- [ ] Verify no data leakage to other schools after deletion
 
 ---
 

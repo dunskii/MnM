@@ -285,53 +285,41 @@ Phase 2 features to be implemented **after** the 12-week MVP launch. These featu
 
 ---
 
-## Phase 2F: Hybrid Lesson Model (4 weeks)
+## ~~Phase 2F: Hybrid Lesson Model~~ → MOVED TO MVP
 
-### Complex Hybrid Lessons (Group + Individual Rotation)
+> **UPDATE (2025-12-21):** The Hybrid Lesson Model has been **moved to MVP Phase 4 (Weeks 7-8)**. It is the core differentiator for Music 'n Me and must be included in the initial launch.
+>
+> See `Development_Task_List.md` Section 4.3-4.5 for the complete implementation tasks.
 
-**Problem**: School's unique teaching model alternates between group and individual sessions.
+### What's Included in MVP:
+- Hybrid lesson pattern configuration (group/individual week patterns)
+- Parent booking system for individual sessions
+- Calendar placeholders for unbooked weeks
+- 24-hour booking/cancellation policy
+- Booking notifications
+- Hybrid-specific invoice calculation
 
-**Solution**: Hybrid lesson configuration with booking system for individual weeks.
+### Advanced Hybrid Features (Still Phase 2):
+The following **advanced** hybrid lesson features remain deferred to Phase 2:
 
-#### Features (from original spec)
+1. **Automated Booking Reminders**
+   - Smart reminders when individual weeks approach
+   - Escalation if slots remain unbooked close to deadline
 
-1. **Hybrid Lesson Configuration**
-   - Define pattern: which weeks are group, which are individual
-   - Example: Weeks 1-3 group, Week 4 individual, Weeks 5-7 group, Week 8 individual, etc.
-   - Set pricing per type (group rate, individual rate)
+2. **Waitlist System**
+   - Allow parents to join waitlist for fully-booked slots
+   - Auto-notification when slot becomes available
 
-2. **Parent Booking System**
-   - Admin opens booking for individual weeks
-   - Parents book preferred time slots
-   - Teacher availability slots configurable
-   - Conflict prevention (no double-booking)
+3. **Recurring Booking Preferences**
+   - Parents can set preferred time slots
+   - System auto-suggests slots based on preferences
 
-3. **Calendar Placeholders**
-   - Group weeks: show regular group class
-   - Individual weeks: show placeholder "1-on-1 Week" at regular group time
-   - Booked individual sessions appear separately
+4. **Analytics & Reporting**
+   - Booking completion rates
+   - Popular time slots analysis
+   - No-show tracking for individual sessions
 
-4. **Parent Rescheduling**
-   - Parents can reschedule individual sessions (if enabled)
-   - 24-hour notice required
-   - Only reschedule individual sessions from hybrid lessons
-
-5. **Invoicing**
-   - Automatically calculate:
-     - Number of group weeks × group rate
-     - Number of individual weeks × individual rate
-   - Separate line items on invoice
-
-#### Technical Implementation
-
-- Add `HybridLessonConfig` model
-- Add `IndividualSessionBooking` model
-- Booking availability calculation
-- Calendar view with placeholders
-- Notification system (booking open, reminders)
-- Invoice calculation logic
-
-**Estimated Effort**: 4 weeks
+**Estimated Effort for Advanced Features**: 2 weeks
 
 ---
 
@@ -462,14 +450,18 @@ Phase 2 features to be implemented **after** the 12-week MVP launch. These featu
 
 ## Phase 2 Summary
 
-### Total Estimated Timeline: 32 weeks (~8 months)
+### Total Estimated Timeline: 30 weeks (~7.5 months)
+
+> *Reduced from 32 weeks - basic Hybrid Lesson Model now in MVP*
 
 Can be broken into smaller releases:
 
 **Phase 2.1 (Weeks 1-8)**: Payment Plans + Teacher Training
 **Phase 2.2 (Weeks 9-16)**: Events + Blog/Newsletter
-**Phase 2.3 (Weeks 17-24)**: CRM + Hybrid Lessons
-**Phase 2.4 (Weeks 25-32)**: Integrations + Reporting + Mobile
+**Phase 2.3 (Weeks 17-22)**: CRM + Advanced Hybrid Features (reduced - basic hybrid now in MVP)
+**Phase 2.4 (Weeks 23-30)**: Integrations + Reporting + Mobile
+
+> **Timeline reduced by ~2 weeks** since basic Hybrid Lesson Model moved to MVP.
 
 ### Priority Recommendations
 
@@ -482,13 +474,16 @@ Can be broken into smaller releases:
 **Medium Priority** (Nice to have):
 5. Blog/newsletter
 6. CRM enhancements
-7. Hybrid lessons
+7. ~~Hybrid lessons~~ → **NOW IN MVP**
 8. Reporting dashboard
 
 **Lower Priority** (Can wait):
 9. Teacher training module
 10. Xero integration
 11. PWA/mobile enhancements
+
+> **Note:** Hybrid Lesson Model (basic) is now included in the 12-week MVP.
+> Only advanced features (waitlist, recurring preferences, analytics) remain in Phase 2.
 
 ---
 

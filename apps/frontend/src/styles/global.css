@@ -1,0 +1,115 @@
+/* ===========================================
+   Music 'n Me - Global Styles
+   Brand Guidelines: Flat design, no gradients, no shadows
+   =========================================== */
+
+/* Reset and base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', 'Avenir', 'Roboto', 'SF Pro', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  color: #080808;
+  line-height: 1.6;
+}
+
+/* Custom font face for Monkey Mayhem (if available) */
+/* @font-face {
+  font-family: 'Monkey Mayhem';
+  src: url('/fonts/MonkeyMayhem.woff2') format('woff2'),
+       url('/fonts/MonkeyMayhem.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+} */
+
+/* Links */
+a {
+  color: #4580E4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid #4580E4;
+  outline-offset: 2px;
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Image defaults */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Scrollbar styling (optional - for consistency) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FCF6E6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4580E4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3899ec;
+}
+
+/* Utility classes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Brand color utilities */
+.bg-primary { background-color: #4580E4; }
+.bg-secondary { background-color: #FFCE00; }
+.bg-mint { background-color: #96DAC9; }
+.bg-coral { background-color: #FFAE9E; }
+.bg-cream { background-color: #FCF6E6; }
+
+.text-primary { color: #4580E4; }
+.text-secondary { color: #FFCE00; }
+.text-mint { color: #96DAC9; }
+.text-coral { color: #FFAE9E; }
+
+/* Character color utilities (for age group mascots) */
+.bg-alice { background-color: #FFB6C1; } /* Pink - Preschool */
+.bg-steve { background-color: #FFCE00; } /* Yellow - Kids */
+.bg-liam { background-color: #4580E4; }  /* Blue - Teens */
+.bg-floyd { background-color: #96DAC9; } /* Mint - Adult */

@@ -201,6 +201,13 @@ const lessons = await prisma.lesson.findMany({
   - File visibility rules (ALL, TEACHERS_AND_PARENTS, TEACHERS_ONLY)
 - Email notifications
 - Dashboards (Admin, Teacher, Parent)
+- **Account Deletion & Data Privacy** (GDPR/Privacy Act/COPPA)
+  - User self-deletion with 30-day grace period
+  - Parent can delete children's data
+  - Configurable data retention per school
+  - Data export (right to portability)
+  - School-level deletion for multi-tenant SaaS
+  - See `Planning/Account_Deletion_Specification.md` for details
 
 **Defer to Phase 2**:
 - Monthly subscription payments
@@ -219,7 +226,12 @@ MnM/
 ├── apps/
 │   ├── backend/          # Node + Express + Prisma
 │   └── frontend/         # React + Vite + MUI
-├── Planning/             # All detailed documentation
+├── Planning/
+│   ├── specifications/   # Technical specs (Meet & Greet, Drive Sync, Deletion)
+│   ├── roadmaps/         # MVP plan, task list, Phase 2
+│   ├── reference/        # Brand guidelines, architecture, client materials
+│   └── archive/          # Outdated docs (early drafts, meeting notes)
+├── docs/                 # Developer documentation
 ├── CLAUDE.md             # This file
 └── README.md
 ```
@@ -248,15 +260,24 @@ npm run build            # Production build
 - `git-workflow.md` - Git branching and commits
 
 ### Project Planning (Planning/ directory)
-- `12_Week_MVP_Plan.md` - **Current sprint breakdown** (updated)
+
+**Specifications** (`Planning/specifications/`):
 - `Meet_and_Greet_Specification.md` - Meet & greet system technical spec
 - `Google_Drive_Sync_Specification.md` - Google Drive sync technical spec
+- `Account_Deletion_Specification.md` - **GDPR/Privacy Act/COPPA compliance**
+
+**Roadmaps** (`Planning/roadmaps/`):
+- `12_Week_MVP_Plan.md` - **Current sprint breakdown**
+- `Development_Task_List.md` - **Complete task checklist** (300+ items)
 - `Phase_2_Roadmap.md` - Deferred features and timeline
-- `Music_n_Me_System_Overview.md` - Complete system docs (original)
-- `8_Week_MVP_Plan.md` - Original plan (archived)
+
+**Reference** (`Planning/reference/`):
+- `Brand_Guidelines_Reference.md` - Colors, fonts, logo usage
 - `Technical_Architecture_Overview.md` - Architecture details
-- `Development_Guidelines.md` - Code style, testing, Git workflow
+- `Music_n_Me_System_Overview.md` - Complete system docs (original)
 - `Body_Chi_Me_Review_And_Recommendations.md` - Patterns from Body Chi Me
+
+**Archive** (`Planning/archive/`): Outdated docs, early drafts, meeting notes
 
 ### Development Tools & Commands
 - `.claude/commands/` - Slash commands (/study, /plan, /qa, /report, /commit)

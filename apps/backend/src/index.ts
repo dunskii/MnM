@@ -4,8 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 
-import { errorHandler } from './middleware/errorHandler.js';
-import { notFound } from './middleware/notFound.js';
+import { errorHandler } from './middleware/errorHandler';
+import { notFound } from './middleware/notFound';
+import routes from './routes';
 
 // Load environment variables
 dotenv.config();
@@ -52,14 +53,10 @@ app.get('/health', (_req: Request, res: Response) => {
 // API Routes
 // ===========================================
 
-// TODO: Add routes as they are implemented
-// app.use(`${API_PREFIX}/auth`, authRoutes);
-// app.use(`${API_PREFIX}/admin`, adminRoutes);
-// app.use(`${API_PREFIX}/teachers`, teacherRoutes);
-// app.use(`${API_PREFIX}/parents`, parentRoutes);
-// app.use(`${API_PREFIX}/public`, publicRoutes);
+// Mount all routes
+app.use(API_PREFIX, routes);
 
-// Placeholder route
+// Root API info
 app.get(API_PREFIX, (_req: Request, res: Response) => {
   res.json({
     message: "Welcome to Music 'n Me API",

@@ -1,7 +1,14 @@
 import { Routes, Route } from 'react-router-dom';
 import { Box, Container, Typography, Button } from '@mui/material';
 
-// Placeholder pages - will be replaced with actual components
+// Pages
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Placeholder pages
 const Home = () => (
   <Container maxWidth="lg" sx={{ py: 4 }}>
     <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -27,17 +34,6 @@ const Home = () => (
         </Button>
       </Box>
     </Box>
-  </Container>
-);
-
-const Login = () => (
-  <Container maxWidth="sm" sx={{ py: 4 }}>
-    <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>
-      Login
-    </Typography>
-    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-      Login form will be implemented in Week 1
-    </Typography>
   </Container>
 );
 
@@ -70,8 +66,16 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/meet-and-greet" element={<MeetAndGreet />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

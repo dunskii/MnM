@@ -2,6 +2,76 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// ===========================================
+// Environment Validation
+// ===========================================
+
+/**
+ * Get JWT secret with production validation
+ * SECURITY: In production, JWT_SECRET MUST be set - no fallback allowed
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!secret) {
+      throw new Error(
+        'CRITICAL: JWT_SECRET environment variable is required in production. ' +
+        'Generate a secure secret with: openssl rand -base64 64'
+      );
+    }
+    if (secret.length < 32) {
+      throw new Error(
+        'CRITICAL: JWT_SECRET must be at least 32 characters in production.'
+      );
+    }
+  }
+
+  // Development fallback (logged warning)
+  if (!secret) {
+    console.warn(
+      '⚠️  WARNING: Using default JWT secret. This is insecure and should only be used in development.'
+    );
+    return 'dev-only-jwt-secret-do-not-use-in-production';
+  }
+
+  return secret;
+}
+
+/**
+ * Validate required environment variables on startup
+ */
+function validateRequiredEnvVars(): void {
+  const required: { name: string; productionOnly: boolean }[] = [
+    { name: 'DATABASE_URL', productionOnly: false },
+    { name: 'JWT_SECRET', productionOnly: true },
+  ];
+
+  const missing: string[] = [];
+
+  for (const { name, productionOnly } of required) {
+    if (!process.env[name]) {
+      if (productionOnly && process.env.NODE_ENV !== 'production') {
+        continue; // Skip production-only vars in development
+      }
+      missing.push(name);
+    }
+  }
+
+  if (missing.length > 0 && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}`
+    );
+  }
+}
+
+// Run validation on module load
+validateRequiredEnvVars();
+
+// ===========================================
+// Configuration Export
+// ===========================================
+
 export const config = {
   // Server
   env: process.env.NODE_ENV || 'development',
@@ -11,9 +81,9 @@ export const config = {
   // Database
   databaseUrl: process.env.DATABASE_URL || '',
 
-  // JWT
+  // JWT - SECURITY: Uses validated secret
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+    secret: getJwtSecret(),
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },

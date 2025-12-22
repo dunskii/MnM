@@ -2,10 +2,12 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
+import { csrfTokenGenerator, getCsrfToken } from './middleware/csrf';
 import routes from './routes';
 
 // Load environment variables
@@ -27,8 +29,11 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
 }));
+
+// Cookie parser (required for CSRF)
+app.use(cookieParser());
 
 // Request logging
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -36,6 +41,15 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// CSRF token generation (sets cookie on all requests)
+app.use(csrfTokenGenerator);
+
+// ===========================================
+// CSRF Token Endpoint
+// ===========================================
+
+app.get('/api/csrf-token', getCsrfToken);
 
 // ===========================================
 // Health Check

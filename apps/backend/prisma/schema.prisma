@@ -25,10 +25,10 @@ enum UserRole {
 }
 
 enum AgeGroup {
-  PRESCHOOL  // 3-5 years (Alice - Pink)
-  KIDS       // 6-11 years (Steve - Yellow)
-  TEENS      // 12-17 years (Liam - Blue)
-  ADULT      // 18+ years (Floyd - Mint)
+  PRESCHOOL // 3-5 years (Alice - Pink)
+  KIDS // 6-11 years (Steve - Yellow)
+  TEENS // 12-17 years (Liam - Blue)
+  ADULT // 18+ years (Floyd - Mint)
 }
 
 enum LessonTypeEnum {
@@ -39,8 +39,8 @@ enum LessonTypeEnum {
 }
 
 enum HybridPatternType {
-  ALTERNATING  // Every other week
-  CUSTOM       // Custom week pattern
+  ALTERNATING // Every other week
+  CUSTOM // Custom week pattern
 }
 
 enum HybridBookingStatus {
@@ -93,7 +93,7 @@ enum PaymentMethod {
 }
 
 enum FileVisibility {
-  ALL                 // Students, parents, teachers
+  ALL // Students, parents, teachers
   TEACHERS_AND_PARENTS
   TEACHERS_ONLY
 }
@@ -123,26 +123,34 @@ model School {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Stripe Connect fields
+  stripeAccountId          String? // Stripe Connect account ID
+  stripeAccountStatus      String? // 'pending', 'active', 'restricted'
+  stripeOnboardingComplete Boolean  @default(false)
+  registrationFee          Decimal? @db.Decimal(10, 2) // Default registration fee in AUD
+
   // Relations
-  users             User[]
-  teachers          Teacher[]
-  parents           Parent[]
-  students          Student[]
-  families          Family[]
-  terms             Term[]
-  locations         Location[]
-  instruments       Instrument[]
-  lessonTypes       LessonType[]
-  lessonDurations   LessonDuration[]
-  pricingPackages   PricingPackage[]
-  lessons           Lesson[]
-  notes             Note[]
-  resources         Resource[]
-  meetAndGreets     MeetAndGreet[]
-  invoices          Invoice[]
-  retentionPolicy   SchoolRetentionPolicy?
+  users                User[]
+  teachers             Teacher[]
+  parents              Parent[]
+  students             Student[]
+  families             Family[]
+  terms                Term[]
+  locations            Location[]
+  instruments          Instrument[]
+  lessonTypes          LessonType[]
+  lessonDurations      LessonDuration[]
+  pricingPackages      PricingPackage[]
+  lessons              Lesson[]
+  notes                Note[]
+  resources            Resource[]
+  meetAndGreets        MeetAndGreet[]
+  invoices             Invoice[]
+  registrationPayments RegistrationPayment[]
+  retentionPolicy      SchoolRetentionPolicy?
 
   @@index([slug])
+  @@index([stripeAccountId])
 }
 
 model User {
@@ -167,12 +175,12 @@ model User {
   updatedAt           DateTime       @updatedAt
 
   // Relations
-  school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher        Teacher?
   parent         Parent?
   student        Student?
-  notes          Note[]          @relation("NoteAuthor")
-  resources      Resource[]      @relation("ResourceUploader")
+  notes          Note[]             @relation("NoteAuthor")
+  resources      Resource[]         @relation("ResourceUploader")
   refreshTokens  RefreshToken[]
   loginAttempts  LoginAttempt[]
   deletionAudits DeletionAuditLog[]
@@ -217,19 +225,19 @@ model LoginAttempt {
 // ===========================================
 
 model Teacher {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  schoolId    String
-  bio         String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  schoolId  String
+  bio       String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  school      School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  instruments TeacherInstrument[]
-  lessons     Lesson[]
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school        School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  instruments   TeacherInstrument[]
+  lessons       Lesson[]
   meetAndGreets MeetAndGreet[]
 
   @@index([schoolId])
@@ -252,25 +260,25 @@ model TeacherInstrument {
 }
 
 model Parent {
-  id        String   @id @default(uuid())
-  userId    String   @unique
+  id        String  @id @default(uuid())
+  userId    String  @unique
   schoolId  String
   familyId  String?
-  isPrimary Boolean  @default(true)
+  isPrimary Boolean @default(true)
 
   // Contact information (2 contacts + emergency)
   contact1Name         String
   contact1Email        String
   contact1Phone        String
-  contact1Relationship String   @default("Parent")
+  contact1Relationship String @default("Parent")
 
   contact2Name         String?
   contact2Email        String?
   contact2Phone        String?
   contact2Relationship String?
 
-  emergencyName        String
-  emergencyPhone       String
+  emergencyName         String
+  emergencyPhone        String
   emergencyRelationship String
 
   createdAt DateTime @default(now())
@@ -287,30 +295,30 @@ model Parent {
 }
 
 model Student {
-  id           String    @id @default(uuid())
-  userId       String?   @unique
-  schoolId     String
-  familyId     String?
-  firstName    String
-  lastName     String
-  birthDate    DateTime
-  ageGroup     AgeGroup
-  notes        String?
-  isActive     Boolean   @default(true)
+  id             String         @id @default(uuid())
+  userId         String?        @unique
+  schoolId       String
+  familyId       String?
+  firstName      String
+  lastName       String
+  birthDate      DateTime
+  ageGroup       AgeGroup
+  notes          String?
+  isActive       Boolean        @default(true)
   deletionStatus DeletionStatus @default(ACTIVE)
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   // Relations
-  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  family            Family?            @relation(fields: [familyId], references: [id])
-  enrollments       LessonEnrollment[]
-  attendances       Attendance[]
-  studentNotes      Note[]             @relation("StudentNotes")
-  resources         Resource[]         @relation("StudentResources")
-  hybridBookings    HybridBooking[]
+  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  family         Family?            @relation(fields: [familyId], references: [id])
+  enrollments    LessonEnrollment[]
+  attendances    Attendance[]
+  studentNotes   Note[]             @relation("StudentNotes")
+  resources      Resource[]         @relation("StudentResources")
+  hybridBookings HybridBooking[]
 
   @@index([schoolId])
   @@index([familyId])
@@ -321,7 +329,7 @@ model Student {
 model Family {
   id              String         @id @default(uuid())
   schoolId        String
-  name            String         // e.g., "The Smith Family"
+  name            String // e.g., "The Smith Family"
   primaryParentId String?
   deletionStatus  DeletionStatus @default(ACTIVE)
   deletedAt       DateTime?
@@ -345,7 +353,7 @@ model Family {
 model Term {
   id        String   @id @default(uuid())
   schoolId  String
-  name      String   // e.g., "Term 1 2025"
+  name      String // e.g., "Term 1 2025"
   startDate DateTime
   endDate   DateTime
   isActive  Boolean  @default(true)
@@ -353,10 +361,10 @@ model Term {
   updatedAt DateTime @updatedAt
 
   // Relations
-  school              School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  lessons             Lesson[]
+  school               School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  lessons              Lesson[]
   hybridLessonPatterns HybridLessonPattern[]
-  invoices            Invoice[]
+  invoices             Invoice[]
 
   @@index([schoolId])
   @@index([startDate, endDate])
@@ -398,16 +406,16 @@ model Room {
 model Instrument {
   id        String   @id @default(uuid())
   schoolId  String
-  name      String   // Piano, Guitar, Drums, Singing, Bass, Preschool, etc.
+  name      String // Piano, Guitar, Drums, Singing, Bass, Preschool, etc.
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  school       School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  teachers     TeacherInstrument[]
-  lessons      Lesson[]
+  school        School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teachers      TeacherInstrument[]
+  lessons       Lesson[]
   meetAndGreets MeetAndGreet[]
 
   @@unique([schoolId, name])
@@ -417,9 +425,9 @@ model Instrument {
 model LessonType {
   id              String         @id @default(uuid())
   schoolId        String
-  name            String         // Individual, Group, Band, Hybrid, etc.
+  name            String // Individual, Group, Band, Hybrid, etc.
   type            LessonTypeEnum
-  defaultDuration Int            // in minutes
+  defaultDuration Int // in minutes
   description     String?
   isActive        Boolean        @default(true)
   sortOrder       Int            @default(0)
@@ -437,7 +445,7 @@ model LessonType {
 model LessonDuration {
   id        String   @id @default(uuid())
   schoolId  String
-  minutes   Int      // 30, 45, 60, etc.
+  minutes   Int // 30, 45, 60, etc.
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -456,10 +464,10 @@ model LessonDuration {
 model PricingPackage {
   id          String   @id @default(uuid())
   schoolId    String
-  name        String   // e.g., "Beginner Piano - Term"
+  name        String // e.g., "Beginner Piano - Term"
   description String?
   price       Decimal  @db.Decimal(10, 2)
-  items       Json     // Array of included items
+  items       Json // Array of included items
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -476,38 +484,38 @@ model PricingPackage {
 // ===========================================
 
 model Lesson {
-  id            String         @id @default(uuid())
-  schoolId      String
-  lessonTypeId  String
-  termId        String
-  teacherId     String
-  roomId        String
-  instrumentId  String?
-  name          String
-  description   String?
-  dayOfWeek     Int            // 0 = Sunday, 1 = Monday, etc.
-  startTime     String         // "09:00"
-  endTime       String         // "10:00"
-  durationMins  Int
-  maxStudents   Int            @default(1)
-  isRecurring   Boolean        @default(true)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           String   @id @default(uuid())
+  schoolId     String
+  lessonTypeId String
+  termId       String
+  teacherId    String
+  roomId       String
+  instrumentId String?
+  name         String
+  description  String?
+  dayOfWeek    Int // 0 = Sunday, 1 = Monday, etc.
+  startTime    String // "09:00"
+  endTime      String // "10:00"
+  durationMins Int
+  maxStudents  Int      @default(1)
+  isRecurring  Boolean  @default(true)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  school              School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  lessonType          LessonType           @relation(fields: [lessonTypeId], references: [id])
-  term                Term                 @relation(fields: [termId], references: [id])
-  teacher             Teacher              @relation(fields: [teacherId], references: [id])
-  room                Room                 @relation(fields: [roomId], references: [id])
-  instrument          Instrument?          @relation(fields: [instrumentId], references: [id])
-  enrollments         LessonEnrollment[]
-  attendances         Attendance[]
-  notes               Note[]               @relation("LessonNotes")
-  resources           Resource[]           @relation("LessonResources")
-  hybridPattern       HybridLessonPattern?
-  hybridBookings      HybridBooking[]
+  school         School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  lessonType     LessonType           @relation(fields: [lessonTypeId], references: [id])
+  term           Term                 @relation(fields: [termId], references: [id])
+  teacher        Teacher              @relation(fields: [teacherId], references: [id])
+  room           Room                 @relation(fields: [roomId], references: [id])
+  instrument     Instrument?          @relation(fields: [instrumentId], references: [id])
+  enrollments    LessonEnrollment[]
+  attendances    Attendance[]
+  notes          Note[]               @relation("LessonNotes")
+  resources      Resource[]           @relation("LessonResources")
+  hybridPattern  HybridLessonPattern?
+  hybridBookings HybridBooking[]
 
   @@index([schoolId])
   @@index([termId])
@@ -541,8 +549,8 @@ model HybridLessonPattern {
   lessonId               String            @unique
   termId                 String
   patternType            HybridPatternType
-  groupWeeks             Json              // Array of week numbers, e.g., [1,2,3,5,6,7,9,10]
-  individualWeeks        Json              // Array of week numbers, e.g., [4,8]
+  groupWeeks             Json // Array of week numbers, e.g., [1,2,3,5,6,7,9,10]
+  individualWeeks        Json // Array of week numbers, e.g., [4,8]
   individualSlotDuration Int               @default(30) // minutes
   bookingDeadlineHours   Int               @default(24)
   bookingsOpen           Boolean           @default(false)
@@ -550,30 +558,30 @@ model HybridLessonPattern {
   updatedAt              DateTime          @updatedAt
 
   // Relations
-  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  term     Term   @relation(fields: [termId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  term   Term   @relation(fields: [termId], references: [id])
 
   @@index([lessonId])
   @@index([termId])
 }
 
 model HybridBooking {
-  id                String              @id @default(uuid())
-  lessonId          String
-  studentId         String
-  parentId          String
-  weekNumber        Int
-  scheduledDate     DateTime
-  startTime         String              // "09:00"
-  endTime           String              // "09:30"
-  status            HybridBookingStatus @default(PENDING)
-  bookedAt          DateTime            @default(now())
-  confirmedAt       DateTime?
-  cancelledAt       DateTime?
+  id                 String              @id @default(uuid())
+  lessonId           String
+  studentId          String
+  parentId           String
+  weekNumber         Int
+  scheduledDate      DateTime
+  startTime          String // "09:00"
+  endTime            String // "09:30"
+  status             HybridBookingStatus @default(PENDING)
+  bookedAt           DateTime            @default(now())
+  confirmedAt        DateTime?
+  cancelledAt        DateTime?
   cancellationReason String?
-  completedAt       DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  completedAt        DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   // Relations
   lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -592,14 +600,14 @@ model HybridBooking {
 // ===========================================
 
 model Attendance {
-  id           String           @id @default(uuid())
-  lessonId     String
-  studentId    String
-  date         DateTime
-  status       AttendanceStatus @default(PRESENT)
+  id            String           @id @default(uuid())
+  lessonId      String
+  studentId     String
+  date          DateTime
+  status        AttendanceStatus @default(PRESENT)
   absenceReason String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   // Relations
   lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -615,9 +623,9 @@ model Note {
   id        String     @id @default(uuid())
   schoolId  String
   authorId  String
-  lessonId  String?    // For class notes
-  studentId String?    // For student notes
-  date      DateTime   // Date the note refers to
+  lessonId  String? // For class notes
+  studentId String? // For student notes
+  date      DateTime // Date the note refers to
   content   String
   status    NoteStatus @default(PENDING)
   isPrivate Boolean    @default(false) // Teachers-only notes
@@ -642,25 +650,25 @@ model Note {
 // ===========================================
 
 model MeetAndGreet {
-  id                    String             @id @default(uuid())
-  schoolId              String
+  id       String @id @default(uuid())
+  schoolId String
 
   // Student info
-  studentFirstName      String
-  studentLastName       String
-  studentAge            Int
+  studentFirstName String
+  studentLastName  String
+  studentAge       Int
 
   // Contact 1 (Primary)
-  contact1Name          String
-  contact1Email         String
-  contact1Phone         String
-  contact1Relationship  String
+  contact1Name         String
+  contact1Email        String
+  contact1Phone        String
+  contact1Relationship String
 
   // Contact 2 (Optional)
-  contact2Name          String?
-  contact2Email         String?
-  contact2Phone         String?
-  contact2Relationship  String?
+  contact2Name         String?
+  contact2Email        String?
+  contact2Phone        String?
+  contact2Relationship String?
 
   // Emergency Contact
   emergencyName         String
@@ -668,35 +676,39 @@ model MeetAndGreet {
   emergencyRelationship String
 
   // Preferences
-  instrumentId          String?
-  preferredDateTime     DateTime?
-  additionalNotes       String?
+  instrumentId      String?
+  preferredDateTime DateTime?
+  additionalNotes   String?
 
   // Status tracking
-  status                MeetAndGreetStatus @default(PENDING_VERIFICATION)
-  verificationToken     String?            @unique
-  verifiedAt            DateTime?
-  assignedTeacherId     String?
-  scheduledDateTime     DateTime?
-  completedAt           DateTime?
-  rejectionReason       String?
-  followUpNotes         String?
+  status            MeetAndGreetStatus @default(PENDING_VERIFICATION)
+  verificationToken String?            @unique
+  verifiedAt        DateTime?
+  assignedTeacherId String?
+  scheduledDateTime DateTime?
+  completedAt       DateTime?
+  rejectionReason   String?
+  followUpNotes     String?
 
   // Registration conversion
-  stripeSessionId       String?
-  convertedFamilyId     String?
+  registrationToken          String?   @unique
+  registrationTokenExpiresAt DateTime?
+  stripeSessionId            String?
+  convertedFamilyId          String?
 
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  school          School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  instrument      Instrument? @relation(fields: [instrumentId], references: [id])
-  assignedTeacher Teacher?    @relation(fields: [assignedTeacherId], references: [id])
+  school               School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  instrument           Instrument?           @relation(fields: [instrumentId], references: [id])
+  assignedTeacher      Teacher?              @relation(fields: [assignedTeacherId], references: [id])
+  registrationPayments RegistrationPayment[]
 
   @@index([schoolId])
   @@index([status])
   @@index([verificationToken])
+  @@index([registrationToken])
   @@index([contact1Email])
 }
 
@@ -759,7 +771,7 @@ model Payment {
   amount          Decimal       @db.Decimal(10, 2)
   method          PaymentMethod
   stripePaymentId String?
-  reference       String?       // For bank transfers, check numbers, etc.
+  reference       String? // For bank transfers, check numbers, etc.
   notes           String?
   paidAt          DateTime      @default(now())
   createdAt       DateTime      @default(now())
@@ -769,6 +781,39 @@ model Payment {
 
   @@index([invoiceId])
   @@index([stripePaymentId])
+}
+
+// Registration payments (separate from invoice payments)
+model RegistrationPayment {
+  id                    String        @id @default(uuid())
+  schoolId              String
+  meetAndGreetId        String? // Link to meet & greet if applicable
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("AUD")
+  status                PaymentStatus @default(PENDING)
+  paymentMethod         PaymentMethod @default(STRIPE)
+  stripePaymentIntentId String?       @unique
+  stripeSessionId       String?       @unique
+  description           String?
+  metadata              Json          @default("{}")
+  paidAt                DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  // Relations
+  school       School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  meetAndGreet MeetAndGreet? @relation(fields: [meetAndGreetId], references: [id], onDelete: SetNull)
+
+  @@index([schoolId])
+  @@index([meetAndGreetId])
+  @@index([stripePaymentIntentId])
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }
 
 // ===========================================
@@ -784,9 +829,9 @@ model Resource {
   fileName      String
   fileType      String
   fileSize      Int
-  filePath      String         // Local storage path
-  driveFileId   String?        // Google Drive file ID
-  driveFolderId String?        // Google Drive folder ID
+  filePath      String // Local storage path
+  driveFileId   String? // Google Drive file ID
+  driveFolderId String? // Google Drive folder ID
   visibility    FileVisibility @default(ALL)
   syncStatus    String         @default("synced") // synced, pending, error
   tags          Json           @default("[]")
@@ -810,13 +855,13 @@ model Resource {
 // ===========================================
 
 model DeletionAuditLog {
-  id             String   @id @default(uuid())
-  userId         String
-  action         String   // REQUEST, CANCEL, SOFT_DELETE, HARD_DELETE, RESTORE
-  reason         String?
-  performedBy    String?  // Admin ID if admin-initiated
-  dataAffected   Json     @default("{}") // Summary of affected records
-  createdAt      DateTime @default(now())
+  id           String   @id @default(uuid())
+  userId       String
+  action       String // REQUEST, CANCEL, SOFT_DELETE, HARD_DELETE, RESTORE
+  reason       String?
+  performedBy  String? // Admin ID if admin-initiated
+  dataAffected Json     @default("{}") // Summary of affected records
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -826,14 +871,14 @@ model DeletionAuditLog {
 }
 
 model SchoolRetentionPolicy {
-  id                    String   @id @default(uuid())
-  schoolId              String   @unique
-  gracePeriodDays       Int      @default(30)
-  financialRetentionYears Int    @default(7)
-  attendanceRetentionYears Int   @default(3)
-  notesRetentionDays    Int      @default(365)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                       String   @id @default(uuid())
+  schoolId                 String   @unique
+  gracePeriodDays          Int      @default(30)
+  financialRetentionYears  Int      @default(7)
+  attendanceRetentionYears Int      @default(3)
+  notesRetentionDays       Int      @default(365)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }

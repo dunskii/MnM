@@ -3,27 +3,50 @@
 // ===========================================
 
 import { Router } from 'express';
+import { csrfProtection } from '../middleware/csrf';
 import authRoutes from './auth.routes';
 import adminRoutes from './admin.routes';
 import teachersRoutes from './teachers.routes';
 import parentsRoutes from './parents.routes';
 import studentsRoutes from './students.routes';
 import familiesRoutes from './families.routes';
+import meetAndGreetRoutes from './meetAndGreet.routes';
+import paymentRoutes from './payment.routes';
+import registrationRoutes from './registration.routes';
 
 const router = Router();
 
-// Mount routes
+// ===========================================
+// Public Routes (No CSRF for initial access)
+// ===========================================
+
+// Auth routes - login doesn't need CSRF (uses credentials)
 router.use('/auth', authRoutes);
-router.use('/admin', adminRoutes);
-router.use('/teachers', teachersRoutes);
-router.use('/parents', parentsRoutes);
-router.use('/students', studentsRoutes);
-router.use('/families', familiesRoutes);
+
+// Meet & Greet routes (public booking + admin endpoints)
+// Public endpoints don't need CSRF, admin endpoints get it via middleware below
+router.use('/', meetAndGreetRoutes);
+
+// Payment routes (webhook doesn't need CSRF - verified by Stripe signature)
+router.use('/payments', paymentRoutes);
+
+// Registration routes (public completion endpoint)
+router.use('/registration', registrationRoutes);
+
+// ===========================================
+// Protected Routes (With CSRF Protection)
+// ===========================================
+
+// Apply CSRF protection to all state-changing admin routes
+router.use('/admin', csrfProtection, adminRoutes);
+router.use('/teachers', csrfProtection, teachersRoutes);
+router.use('/parents', csrfProtection, parentsRoutes);
+router.use('/students', csrfProtection, studentsRoutes);
+router.use('/families', csrfProtection, familiesRoutes);
 
 // Future routes will be added here:
 // router.use('/lessons', lessonRoutes);
 // router.use('/attendance', attendanceRoutes);
 // router.use('/invoices', invoiceRoutes);
-// router.use('/meet-and-greet', meetAndGreetRoutes);
 
 export default router;

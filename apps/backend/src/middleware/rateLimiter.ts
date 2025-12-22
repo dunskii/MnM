@@ -158,3 +158,148 @@ export async function clearLoginAttempts(ipAddress: string): Promise<void> {
     },
   });
 }
+
+// ===========================================
+// PAYMENT RATE LIMITER
+// ===========================================
+// In-memory rate limiter for payment endpoints
+// Prevents abuse of checkout session creation
+
+interface PaymentRateLimitEntry {
+  count: number;
+  firstRequest: number;
+}
+
+const paymentRateLimitStore = new Map<string, PaymentRateLimitEntry>();
+
+const PAYMENT_RATE_LIMIT = {
+  maxRequests: 10,       // Max requests per window
+  windowMs: 60 * 1000,   // 1 minute window
+};
+
+// Clean up old entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of paymentRateLimitStore.entries()) {
+    if (now - entry.firstRequest > PAYMENT_RATE_LIMIT.windowMs) {
+      paymentRateLimitStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+/**
+ * Payment rate limiter middleware
+ * Limits checkout session creation to prevent abuse
+ */
+export const paymentRateLimiter = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const ipAddress = getClientIP(req);
+    const now = Date.now();
+
+    const entry = paymentRateLimitStore.get(ipAddress);
+
+    if (!entry) {
+      // First request from this IP
+      paymentRateLimitStore.set(ipAddress, { count: 1, firstRequest: now });
+      next();
+      return;
+    }
+
+    // Check if window has expired
+    if (now - entry.firstRequest > PAYMENT_RATE_LIMIT.windowMs) {
+      // Reset the window
+      paymentRateLimitStore.set(ipAddress, { count: 1, firstRequest: now });
+      next();
+      return;
+    }
+
+    // Within window, check count
+    if (entry.count >= PAYMENT_RATE_LIMIT.maxRequests) {
+      const remainingSeconds = Math.ceil(
+        (entry.firstRequest + PAYMENT_RATE_LIMIT.windowMs - now) / 1000
+      );
+      throw new AppError(
+        `Too many payment requests. Please try again in ${remainingSeconds} seconds.`,
+        429
+      );
+    }
+
+    // Increment count
+    entry.count++;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ===========================================
+// PUBLIC ENDPOINT RATE LIMITER
+// ===========================================
+// For public endpoints like Meet & Greet booking
+
+interface PublicRateLimitEntry {
+  count: number;
+  firstRequest: number;
+}
+
+const publicRateLimitStore = new Map<string, PublicRateLimitEntry>();
+
+const PUBLIC_RATE_LIMIT = {
+  maxRequests: 5,         // Max requests per window
+  windowMs: 60 * 60 * 1000, // 1 hour window
+};
+
+// Clean up old entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of publicRateLimitStore.entries()) {
+    if (now - entry.firstRequest > PUBLIC_RATE_LIMIT.windowMs) {
+      publicRateLimitStore.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
+
+/**
+ * Public endpoint rate limiter middleware
+ * Limits public booking requests to prevent spam
+ */
+export const publicRateLimiter = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const ipAddress = getClientIP(req);
+    const now = Date.now();
+
+    const entry = publicRateLimitStore.get(ipAddress);
+
+    if (!entry) {
+      publicRateLimitStore.set(ipAddress, { count: 1, firstRequest: now });
+      next();
+      return;
+    }
+
+    if (now - entry.firstRequest > PUBLIC_RATE_LIMIT.windowMs) {
+      publicRateLimitStore.set(ipAddress, { count: 1, firstRequest: now });
+      next();
+      return;
+    }
+
+    if (entry.count >= PUBLIC_RATE_LIMIT.maxRequests) {
+      throw new AppError(
+        'Too many booking requests. Please try again later.',
+        429
+      );
+    }
+
+    entry.count++;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

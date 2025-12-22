@@ -233,8 +233,22 @@ MnM/
 │   └── archive/          # Outdated docs (early drafts, meeting notes)
 ├── docs/                 # Developer documentation
 ├── CLAUDE.md             # This file
+├── PROGRESS.md           # **Development progress tracker** (update after each session)
+├── TASKLIST.md           # **Quick task checklist** (mark items complete as you go)
 └── README.md
 ```
+
+## Progress Tracking
+
+**IMPORTANT:** Always check and update these files at the start/end of each session:
+
+- **`PROGRESS.md`** - Overall project progress, weekly status, milestones
+- **`TASKLIST.md`** - Checkbox task list for quick reference
+
+**Current Status (2025-12-22):**
+- Week 1 & 2: COMPLETE
+- Overall Progress: 17% (2/12 weeks)
+- Next: Week 3 - Meet & Greet System
 
 ## Development Commands
 

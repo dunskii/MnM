@@ -39,6 +39,7 @@ import {
   Groups,
   Logout,
   Settings,
+  Handshake,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -47,6 +48,8 @@ const DRAWER_WIDTH = 260;
 // Navigation items for admin sidebar
 const navigationItems = [
   { label: 'Dashboard', path: '/admin', icon: Dashboard },
+  { divider: true },
+  { label: 'Meet & Greet', path: '/admin/meet-and-greet', icon: Handshake },
   { divider: true },
   { label: 'Terms', path: '/admin/terms', icon: CalendarMonth },
   { label: 'Locations', path: '/admin/locations', icon: LocationOn },

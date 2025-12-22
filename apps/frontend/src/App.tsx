@@ -17,6 +17,11 @@ import TeachersPage from './pages/admin/TeachersPage';
 import ParentsPage from './pages/admin/ParentsPage';
 import StudentsPage from './pages/admin/StudentsPage';
 import FamiliesPage from './pages/admin/FamiliesPage';
+import MeetAndGreetPage from './pages/admin/MeetAndGreetPage';
+
+// Public Pages
+import MeetAndGreetBookingPage from './pages/public/MeetAndGreetBookingPage';
+import MeetAndGreetVerifyPage from './pages/public/MeetAndGreetVerifyPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -43,22 +48,11 @@ const Home = () => (
         <Button variant="contained" color="primary" size="large" href="/login">
           Login
         </Button>
-        <Button variant="outlined" color="secondary" size="large" href="/meet-and-greet">
+        <Button variant="outlined" color="secondary" size="large" href="/meet-and-greet/music-n-me">
           Book Meet & Greet
         </Button>
       </Box>
     </Box>
-  </Container>
-);
-
-const MeetAndGreet = () => (
-  <Container maxWidth="md" sx={{ py: 4 }}>
-    <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>
-      Book a Meet & Greet
-    </Typography>
-    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-      Public booking form will be implemented in Week 3
-    </Typography>
   </Container>
 );
 
@@ -81,7 +75,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/meet-and-greet" element={<MeetAndGreet />} />
+      <Route path="/meet-and-greet/:schoolSlug" element={<MeetAndGreetBookingPage />} />
+      <Route path="/meet-and-greet/verify/:token" element={<MeetAndGreetVerifyPage />} />
       <Route
         path="/dashboard"
         element={
@@ -111,6 +106,7 @@ function App() {
         <Route path="parents" element={<ParentsPage />} />
         <Route path="students" element={<StudentsPage />} />
         <Route path="families" element={<FamiliesPage />} />
+        <Route path="meet-and-greet" element={<MeetAndGreetPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

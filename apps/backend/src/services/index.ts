@@ -18,3 +18,13 @@ export * as teacherService from './teacher.service';
 export * as parentService from './parent.service';
 export * as studentService from './student.service';
 export * as familyService from './family.service';
+
+// Meet & Greet
+export * as meetAndGreetService from './meetAndGreet.service';
+export * as emailService from './email.service';
+
+// Payments
+export * as stripeService from './stripe.service';
+
+// Registration
+export * as registrationService from './registration.service';

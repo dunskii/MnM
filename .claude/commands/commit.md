@@ -25,9 +25,7 @@ Please perform the following git operations:
    git commit -m "$(cat <<'COMMIT_EOF'
 $1
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Dunskii andrew@dunskii.com
 COMMIT_EOF
 )"
    ```

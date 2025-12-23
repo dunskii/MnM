@@ -1,0 +1,593 @@
+// ===========================================
+// Parent Dashboard Page
+// ===========================================
+// Dashboard for parents with family overview, schedules, notes, and resources
+
+import { useState, useMemo, useEffect } from 'react';
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Chip,
+  Alert,
+  Divider,
+  Skeleton,
+  Stack,
+  Paper,
+  Tab,
+  Tabs,
+} from '@mui/material';
+import {
+  Person as PersonIcon,
+  Schedule as ScheduleIcon,
+  School as SchoolIcon,
+  Event as EventIcon,
+  Description as DescriptionIcon,
+  Folder as FolderIcon,
+  ArrowForward as ArrowForwardIcon,
+  CalendarToday as CalendarIcon,
+} from '@mui/icons-material';
+import { format, isSameDay, addDays, startOfWeek } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/common/PageHeader';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLessons } from '../../hooks/useLessons';
+import { useMyBookings } from '../../hooks/useHybridBooking';
+import { useNotesByStudent } from '../../hooks/useNotes';
+import { useResourcesByStudent } from '../../hooks/useResources';
+import { useStudents } from '../../hooks/useUsers';
+import { HybridBooking, formatTimeSlot, getBookingStatusColor } from '../../api/hybridBooking.api';
+import { Note } from '../../api/notes.api';
+import { Resource, formatFileSize } from '../../api/resources.api';
+import { Lesson, getDayName, formatTime } from '../../api/lessons.api';
+
+// ===========================================
+// STAT CARD COMPONENT
+// ===========================================
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+  loading?: boolean;
+  onClick?: () => void;
+}
+
+function StatCard({ title, value, icon, color = 'primary', loading, onClick }: StatCardProps) {
+  return (
+    <Card sx={{ cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography color="text.secondary" variant="body2" gutterBottom>
+              {title}
+            </Typography>
+            {loading ? (
+              <Skeleton variant="text" width={60} height={40} />
+            ) : (
+              <Typography variant="h4" component="div" color={`${color}.main`}>
+                {value}
+              </Typography>
+            )}
+          </Box>
+          <Box
+            sx={{
+              bgcolor: `${color}.light`,
+              borderRadius: 2,
+              p: 1.5,
+              color: `${color}.main`,
+            }}
+          >
+            {icon}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ===========================================
+// STUDENT SELECTOR TAB
+// ===========================================
+
+interface StudentSelectorProps {
+  students: Array<{ id: string; firstName: string; lastName: string }>;
+  selectedStudentId: string;
+  onSelectStudent: (id: string) => void;
+}
+
+function StudentSelector({ students, selectedStudentId, onSelectStudent }: StudentSelectorProps) {
+  if (students.length <= 1) return null;
+
+  return (
+    <Tabs
+      value={selectedStudentId}
+      onChange={(_, value) => onSelectStudent(value)}
+      variant="scrollable"
+      scrollButtons="auto"
+      sx={{ mb: 3 }}
+    >
+      {students.map((student) => (
+        <Tab
+          key={student.id}
+          value={student.id}
+          label={`${student.firstName} ${student.lastName}`}
+          icon={<PersonIcon />}
+          iconPosition="start"
+        />
+      ))}
+    </Tabs>
+  );
+}
+
+// ===========================================
+// UPCOMING SCHEDULE COMPONENT
+// ===========================================
+
+interface UpcomingScheduleProps {
+  lessons: Lesson[];
+  bookings: HybridBooking[];
+  studentId: string;
+  isLoading: boolean;
+}
+
+function UpcomingSchedule({ lessons, bookings, studentId, isLoading }: UpcomingScheduleProps) {
+  if (isLoading) {
+    return <Skeleton variant="rectangular" height={200} />;
+  }
+
+  const today = new Date();
+
+  // Filter lessons for this student's enrollment
+  const studentLessons = lessons.filter((lesson) =>
+    lesson.enrollments?.some((e) => e.studentId === studentId && e.isActive)
+  );
+
+  // Get upcoming bookings (not cancelled, future dates)
+  const upcomingBookings = bookings
+    .filter(
+      (b) =>
+        b.studentId === studentId &&
+        b.status !== 'CANCELLED' &&
+        new Date(b.scheduledDate) >= today
+    )
+    .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+    .slice(0, 5);
+
+  // Generate weekly schedule
+  const weekStart = startOfWeek(today);
+  const weekSchedule = [];
+
+  for (let i = 0; i < 7; i++) {
+    const dayDate = addDays(weekStart, i);
+    const dayOfWeek = dayDate.getDay();
+    const dayLessons = studentLessons.filter((l) => l.dayOfWeek === dayOfWeek && l.isActive);
+    const dayBookings = upcomingBookings.filter((b) =>
+      isSameDay(new Date(b.scheduledDate), dayDate)
+    );
+
+    if (dayLessons.length > 0 || dayBookings.length > 0) {
+      weekSchedule.push({
+        date: dayDate,
+        dayName: getDayName(dayOfWeek),
+        lessons: dayLessons,
+        bookings: dayBookings,
+        isToday: isSameDay(dayDate, today),
+      });
+    }
+  }
+
+  if (weekSchedule.length === 0) {
+    return <Alert severity="info">No lessons scheduled this week.</Alert>;
+  }
+
+  return (
+    <List disablePadding>
+      {weekSchedule.map(({ date, dayName, lessons: dayLessons, bookings: dayBookings, isToday }) => (
+        <Box key={date.toISOString()} sx={{ mb: 2 }}>
+          <Typography
+            variant="subtitle2"
+            color={isToday ? 'primary.main' : 'text.secondary'}
+            sx={{ fontWeight: isToday ? 'bold' : 'normal', mb: 1 }}
+          >
+            {dayName} {format(date, 'MMM d')} {isToday && '(Today)'}
+          </Typography>
+
+          {dayLessons.map((lesson) => (
+            <Paper key={lesson.id} variant="outlined" sx={{ p: 1.5, mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="body1" fontWeight="medium">
+                    {lesson.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)} |{' '}
+                    {lesson.room?.name}
+                  </Typography>
+                </Box>
+                <Chip
+                  label={lesson.lessonType?.name || 'Lesson'}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              </Box>
+            </Paper>
+          ))}
+
+          {dayBookings.map((booking) => (
+            <Paper key={booking.id} variant="outlined" sx={{ p: 1.5, mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="body1" fontWeight="medium">
+                    {booking.lesson?.name || 'Individual Session'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatTimeSlot(booking.startTime, booking.endTime)} | Week {booking.weekNumber}
+                  </Typography>
+                </Box>
+                <Chip
+                  label={booking.status}
+                  size="small"
+                  color={getBookingStatusColor(booking.status)}
+                />
+              </Box>
+            </Paper>
+          ))}
+        </Box>
+      ))}
+    </List>
+  );
+}
+
+// ===========================================
+// RECENT NOTES COMPONENT
+// ===========================================
+
+interface RecentNotesProps {
+  notes: Note[];
+  isLoading: boolean;
+  onViewAll: () => void;
+}
+
+function RecentNotes({ notes, isLoading, onViewAll }: RecentNotesProps) {
+  if (isLoading) {
+    return <Skeleton variant="rectangular" height={150} />;
+  }
+
+  // Show only recent public notes (not private)
+  const recentNotes = notes
+    .filter((n) => !n.isPrivate)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  if (recentNotes.length === 0) {
+    return <Alert severity="info">No notes from teachers yet.</Alert>;
+  }
+
+  return (
+    <Box>
+      <List disablePadding>
+        {recentNotes.map((note) => (
+          <Paper key={note.id} variant="outlined" sx={{ p: 2, mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="subtitle2">
+                {note.lesson?.name || 'General Note'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {format(new Date(note.createdAt), 'MMM d, yyyy')}
+              </Typography>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {note.content}
+            </Typography>
+            <Typography variant="caption" color="primary.main" sx={{ mt: 1, display: 'block' }}>
+              By {note.author?.firstName} {note.author?.lastName}
+            </Typography>
+          </Paper>
+        ))}
+      </List>
+      {notes.filter((n) => !n.isPrivate).length > 5 && (
+        <Button size="small" endIcon={<ArrowForwardIcon />} onClick={onViewAll}>
+          View All Notes
+        </Button>
+      )}
+    </Box>
+  );
+}
+
+// ===========================================
+// RECENT RESOURCES COMPONENT
+// ===========================================
+
+interface RecentResourcesProps {
+  resources: Resource[];
+  isLoading: boolean;
+  onViewAll: () => void;
+}
+
+function RecentResources({ resources, isLoading, onViewAll }: RecentResourcesProps) {
+  if (isLoading) {
+    return <Skeleton variant="rectangular" height={150} />;
+  }
+
+  const recentResources = resources
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  if (recentResources.length === 0) {
+    return <Alert severity="info">No shared resources yet.</Alert>;
+  }
+
+  return (
+    <Box>
+      <List disablePadding>
+        {recentResources.map((resource) => (
+          <ListItem
+            key={resource.id}
+            sx={{
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              mb: 1,
+              px: 2,
+            }}
+          >
+            <ListItemAvatar>
+              <Avatar sx={{ bgcolor: 'primary.light' }}>
+                <FolderIcon color="primary" />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText
+              primary={resource.fileName}
+              secondary={
+                <>
+                  {resource.lesson?.name || 'General'} |{' '}
+                  {formatFileSize(resource.fileSize)} |{' '}
+                  {format(new Date(resource.createdAt), 'MMM d')}
+                </>
+              }
+            />
+          </ListItem>
+        ))}
+      </List>
+      {resources.length > 5 && (
+        <Button size="small" endIcon={<ArrowForwardIcon />} onClick={onViewAll}>
+          View All Resources
+        </Button>
+      )}
+    </Box>
+  );
+}
+
+// ===========================================
+// MAIN COMPONENT
+// ===========================================
+
+export default function ParentDashboardPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Get students for this parent
+  const { data: allStudents, isLoading: studentsLoading } = useStudents();
+
+  // Filter to only students linked to this parent's family
+  // In a real implementation, this would use the parent's familyId
+  const myStudents = useMemo(() => {
+    // For now, show all students (would be filtered by family in production)
+    return allStudents?.filter((s) => s.isActive) || [];
+  }, [allStudents]);
+
+  // Selected student state
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+
+  // Set initial selected student when data loads
+  useEffect(() => {
+    if (!selectedStudentId && myStudents.length > 0) {
+      setSelectedStudentId(myStudents[0].id);
+    }
+  }, [selectedStudentId, myStudents]);
+
+  // Queries for selected student
+  const { data: lessonsData, isLoading: lessonsLoading } = useLessons({ isActive: true });
+  const { data: bookingsData, isLoading: bookingsLoading } = useMyBookings();
+  const { data: notesData, isLoading: notesLoading } = useNotesByStudent(selectedStudentId);
+  const { data: resourcesData, isLoading: resourcesLoading } = useResourcesByStudent(selectedStudentId);
+
+  // Calculate stats
+  const todayDayOfWeek = new Date().getDay();
+  const studentLessons = lessonsData?.filter((lesson) =>
+    lesson.enrollments?.some((e) => e.studentId === selectedStudentId && e.isActive)
+  ) || [];
+  const todayLessons = studentLessons.filter((l) => l.dayOfWeek === todayDayOfWeek);
+  const upcomingBookings = bookingsData?.filter(
+    (b) =>
+      b.studentId === selectedStudentId &&
+      b.status !== 'CANCELLED' &&
+      new Date(b.scheduledDate) >= new Date()
+  ) || [];
+  const unreadNotes = notesData?.filter((n) => !n.isPrivate) || [];
+
+  const isLoading = studentsLoading || lessonsLoading;
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <Skeleton variant="rectangular" width="100%" height={400} />
+      </Box>
+    );
+  }
+
+  if (myStudents.length === 0) {
+    return (
+      <Box>
+        <PageHeader
+          title="Parent Dashboard"
+          subtitle={`Welcome${user?.firstName ? `, ${user.firstName}` : ''}!`}
+        />
+        <Alert severity="info">
+          No students found in your family. Please contact the school to enroll your children.
+        </Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box>
+      <PageHeader
+        title="Parent Dashboard"
+        subtitle={`Welcome back${user?.firstName ? `, ${user.firstName}` : ''}!`}
+      />
+
+      {/* Student Selector (if multiple children) */}
+      <StudentSelector
+        students={myStudents}
+        selectedStudentId={selectedStudentId}
+        onSelectStudent={setSelectedStudentId}
+      />
+
+      {/* Stats Row */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Today's Lessons"
+            value={todayLessons.length}
+            icon={<CalendarIcon />}
+            loading={lessonsLoading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Enrolled Lessons"
+            value={studentLessons.length}
+            icon={<SchoolIcon />}
+            loading={lessonsLoading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Upcoming Bookings"
+            value={upcomingBookings.length}
+            icon={<EventIcon />}
+            color="info"
+            loading={bookingsLoading}
+            onClick={() => navigate('/parent/hybrid-booking')}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Teacher Notes"
+            value={unreadNotes.length}
+            icon={<DescriptionIcon />}
+            color="success"
+            loading={notesLoading}
+          />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
+        {/* Weekly Schedule */}
+        <Grid item xs={12} lg={6}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  <ScheduleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  This Week's Schedule
+                </Typography>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+              <UpcomingSchedule
+                lessons={lessonsData || []}
+                bookings={bookingsData || []}
+                studentId={selectedStudentId}
+                isLoading={lessonsLoading || bookingsLoading}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Quick Actions */}
+        <Grid item xs={12} lg={6}>
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="contained"
+                  startIcon={<EventIcon />}
+                  onClick={() => navigate('/parent/hybrid-booking')}
+                >
+                  Book Individual Session
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<ScheduleIcon />}
+                  onClick={() => navigate('/parent/schedule')}
+                >
+                  View Full Schedule
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          {/* Recent Notes */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <DescriptionIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Recent Teacher Notes
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <RecentNotes
+                notes={notesData || []}
+                isLoading={notesLoading}
+                onViewAll={() => {}}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Resources */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <FolderIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Shared Resources
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <RecentResources
+                resources={resourcesData || []}
+                isLoading={resourcesLoading}
+                onViewAll={() => {}}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}

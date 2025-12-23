@@ -132,6 +132,12 @@ export const config = {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
   },
+
+  // File Upload
+  upload: {
+    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || String(25 * 1024 * 1024), 10), // 25MB default
+    uploadDir: process.env.UPLOAD_DIR || 'uploads',
+  },
 } as const;
 
 export default config;

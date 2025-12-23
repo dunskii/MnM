@@ -44,6 +44,18 @@ export function useLessons(filters?: LessonFilters) {
 }
 
 /**
+ * Get lessons for a specific teacher
+ * Convenience wrapper around useLessons with teacherId filter
+ */
+export function useLessonsByTeacher(teacherId: string) {
+  return useQuery({
+    queryKey: lessonKeys.list({ teacherId }),
+    queryFn: () => lessonsApi.getAll({ teacherId }),
+    enabled: !!teacherId,
+  });
+}
+
+/**
  * Get a single lesson by ID
  * Note: lessonsApi already extracts .data from ApiResponse wrapper
  */

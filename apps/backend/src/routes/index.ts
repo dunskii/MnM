@@ -16,6 +16,9 @@ import calendarRoutes from './calendar.routes';
 import meetAndGreetRoutes from './meetAndGreet.routes';
 import paymentRoutes from './payment.routes';
 import registrationRoutes from './registration.routes';
+import attendanceRoutes from './attendance.routes';
+import notesRoutes from './notes.routes';
+import resourcesRoutes from './resources.routes';
 
 const router = Router();
 
@@ -49,9 +52,11 @@ router.use('/families', csrfProtection, familiesRoutes);
 router.use('/lessons', csrfProtection, lessonsRoutes);
 router.use('/hybrid-bookings', csrfProtection, hybridBookingRoutes);
 router.use('/calendar', csrfProtection, calendarRoutes);
+router.use('/attendance', csrfProtection, attendanceRoutes);
+router.use('/notes', csrfProtection, notesRoutes);
+router.use('/resources', csrfProtection, resourcesRoutes);
 
 // Future routes will be added here:
-// router.use('/attendance', attendanceRoutes);
 // router.use('/invoices', invoiceRoutes);
 
 export default router;

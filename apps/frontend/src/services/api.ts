@@ -209,4 +209,8 @@ export const apiClient = {
 
   delete: <T>(url: string, config?: AxiosRequestConfig) =>
     api.delete<T>(url, config).then((res) => res.data),
+
+  // Raw response (includes headers) - use for blob downloads
+  getRaw: <T>(url: string, config?: AxiosRequestConfig) =>
+    api.get<T>(url, config),
 };

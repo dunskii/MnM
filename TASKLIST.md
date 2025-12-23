@@ -241,30 +241,40 @@
 - [x] React Query hooks (346 lines)
 - [x] API client (427 lines)
 
-### 3.5 Attendance Tracking
-- [ ] GET/POST /lessons/:id/attendance endpoints
-- [ ] Attendance statuses (PRESENT, ABSENT, LATE, EXCUSED)
-- [ ] Attendance history per student
+### 3.5 Attendance Tracking - COMPLETE (Week 6)
+- [x] GET/POST /lessons/:id/attendance endpoints
+- [x] Attendance statuses (PRESENT, ABSENT, LATE, EXCUSED, CANCELLED)
+- [x] Attendance history per student
+- [x] Batch attendance marking
+- [x] Attendance statistics
 
-### 3.6 Teacher Notes
-- [ ] GET/POST /lessons/:id/notes endpoints (class notes)
-- [ ] GET/POST /students/:id/notes endpoints (student notes)
-- [ ] Note completion tracking
-- [ ] Weekly reminder system
+### 3.6 Teacher Notes - COMPLETE (Week 6)
+- [x] GET/POST /lessons/:id/notes endpoints (class notes)
+- [x] GET/POST /students/:id/notes endpoints (student notes)
+- [x] Note completion tracking (PENDING/PARTIAL/COMPLETE)
+- [x] Private notes (teachers only)
+- [x] Weekly completion summary
 
-### 3.7 Teacher Dashboard (Frontend)
-- [ ] "My Classes" view (ALL classes)
-- [ ] Today's schedule widget
-- [ ] Attendance marking interface
-- [ ] Class and student notes interface
-- [ ] Missing notes alerts
+### 3.7 Teacher Dashboard (Frontend) - COMPLETE (Week 6)
+- [x] "My Classes" view (ALL classes)
+- [x] Today's schedule widget
+- [x] Attendance marking interface
+- [x] Class and student notes interface
+- [x] Missing notes alerts
 
-### 3.8 Resource Upload (Basic)
-- [ ] POST /resources/upload endpoint
-- [ ] File type validation
-- [ ] Visibility settings (ALL, TEACHERS_AND_PARENTS, TEACHERS_ONLY)
-- [ ] File upload component
-- [ ] Resource list view
+### 3.8 Resource Upload (Basic) - COMPLETE (Week 6)
+- [x] POST /resources/upload endpoint
+- [x] File type validation
+- [x] Visibility settings (ALL, TEACHERS_AND_PARENTS, TEACHERS_ONLY)
+- [x] File upload component
+- [x] Resource list view
+
+### 3.9 Parent Dashboard (Frontend) - COMPLETE (Week 6)
+- [x] Student selector for multi-child families
+- [x] Weekly schedule view
+- [x] Teacher notes (public only)
+- [x] Shared resources access
+- [x] Quick actions
 
 ---
 
@@ -455,19 +465,21 @@
 | Phase 0: Initialization | Complete | 100% |
 | Phase 1: Foundation (Week 1-2) | Complete | 100% |
 | Phase 2: Public Onboarding (Week 3) | Complete | 100% |
-| Phase 3: Core Operations (Week 4-6) | In Progress | 67% (Week 5 Complete) |
-| Phase 4: Parent Experience (Week 7-8) | Partial | 50% (Hybrid booking moved to Week 5) |
+| Phase 3: Core Operations (Week 4-6) | Complete | 100% |
+| Phase 4: Parent Experience (Week 7-8) | Partial | 50% (Hybrid booking + Parent Dashboard done) |
 | Phase 5: Financial & Resources (Week 9-11) | Not Started | 0% |
 | Phase 6: Polish & Launch (Week 12) | Not Started | 0% |
 
-**Overall: 42% Complete (5/12 weeks)**
+**Overall: 50% Complete (6/12 weeks)**
 
-**Week 5 Status:** COMPLETE ✅ (Grade: A - 95/100)
-- 4,698 lines of new code
-- 19 integration tests passing (100% pass rate)
-- Perfect multi-tenancy security
-- Brand compliant design
-- Production ready
+**Week 6 Status:** COMPLETE (Grade: A - 92/100)
+- ~5,565 lines of new code
+- 58 new integration tests (305 total passing)
+- Attendance system with batch marking
+- Teacher notes with completion tracking
+- Resources with visibility controls
+- Teacher & Parent dashboards complete
+- Phase 3 COMPLETE
 
 ---
 

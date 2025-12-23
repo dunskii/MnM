@@ -22,7 +22,11 @@ import LessonsPage from './pages/admin/LessonsPage';
 import LessonDetailPage from './pages/admin/LessonDetailPage';
 import CalendarPage from './pages/admin/CalendarPage';
 
+// Teacher Pages
+import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
+
 // Parent Pages
+import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 import HybridBookingPage from './pages/parent/HybridBookingPage';
 
 // Public Pages
@@ -32,6 +36,7 @@ import MeetAndGreetVerifyPage from './pages/public/MeetAndGreetVerifyPage';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/layout/AdminLayout';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Placeholder pages
 const Home = () => (
@@ -118,6 +123,18 @@ function App() {
         <Route path="calendar" element={<CalendarPage />} />
       </Route>
 
+      {/* Teacher Routes */}
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute requiredRole="TEACHER">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ErrorBoundary><TeacherDashboardPage /></ErrorBoundary>} />
+      </Route>
+
       {/* Parent Routes */}
       <Route
         path="/parent"
@@ -127,7 +144,8 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="hybrid-booking" element={<HybridBookingPage />} />
+        <Route index element={<ErrorBoundary><ParentDashboardPage /></ErrorBoundary>} />
+        <Route path="hybrid-booking" element={<ErrorBoundary><HybridBookingPage /></ErrorBoundary>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

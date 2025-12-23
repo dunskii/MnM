@@ -5,18 +5,35 @@
 
 import request from 'supertest';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
+// Create test app without CSRF protection for integration tests
 const createTestApp = () => {
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
 
-  const routes = require('../../src/routes').default;
+  // Import individual route modules to avoid CSRF protection
+  const authRoutes = require('../../src/routes/auth.routes').default;
+  const adminRoutes = require('../../src/routes/admin.routes').default;
+  const teachersRoutes = require('../../src/routes/teachers.routes').default;
+  const parentsRoutes = require('../../src/routes/parents.routes').default;
+  const studentsRoutes = require('../../src/routes/students.routes').default;
+  const familiesRoutes = require('../../src/routes/families.routes').default;
+  const lessonsRoutes = require('../../src/routes/lessons.routes').default;
   const { errorHandler } = require('../../src/middleware/errorHandler');
   const { notFound } = require('../../src/middleware/notFound');
 
-  app.use('/api/v1', routes);
+  // Mount routes without CSRF (matching routes/index.ts structure)
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/admin', adminRoutes);
+  app.use('/api/v1/teachers', teachersRoutes);
+  app.use('/api/v1/parents', parentsRoutes);
+  app.use('/api/v1/students', studentsRoutes);
+  app.use('/api/v1/families', familiesRoutes);
+  app.use('/api/v1/lessons', lessonsRoutes);
   app.use(notFound);
   app.use(errorHandler);
 
@@ -27,6 +44,9 @@ const prisma = new PrismaClient();
 
 describe('Multi-Tenancy Security Tests', () => {
   const app = createTestApp();
+
+  // Use unique identifiers to prevent conflicts with other tests
+  const testId = Date.now().toString();
 
   // School A data
   let schoolAId: string;
@@ -44,12 +64,15 @@ describe('Multi-Tenancy Security Tests', () => {
   let adminBToken: string;
 
   beforeAll(async () => {
+    // Clear any rate limiting
+    await prisma.loginAttempt.deleteMany({});
+
     // Create School A
     const schoolA = await prisma.school.create({
       data: {
-        name: 'School A',
-        slug: 'school-a',
-        email: 'admin@schoola.com',
+        name: 'MT School A',
+        slug: `mt-school-a-${testId}`,
+        email: `mtadmin-a-${testId}@schoola.com`,
       },
     });
     schoolAId = schoolA.id;
@@ -57,9 +80,9 @@ describe('Multi-Tenancy Security Tests', () => {
     // Create School B
     const schoolB = await prisma.school.create({
       data: {
-        name: 'School B',
-        slug: 'school-b',
-        email: 'admin@schoolb.com',
+        name: 'MT School B',
+        slug: `mt-school-b-${testId}`,
+        email: `mtadmin-b-${testId}@schoolb.com`,
       },
     });
     schoolBId = schoolB.id;
@@ -70,7 +93,7 @@ describe('Multi-Tenancy Security Tests', () => {
     await prisma.user.create({
       data: {
         schoolId: schoolAId,
-        email: 'admin@school.com',
+        email: `mtadmin-${testId}@school.com`,
         passwordHash,
         firstName: 'Admin',
         lastName: 'A',
@@ -83,7 +106,7 @@ describe('Multi-Tenancy Security Tests', () => {
     await prisma.user.create({
       data: {
         schoolId: schoolBId,
-        email: 'admin@school.com',
+        email: `mtadmin-${testId}@school.com`,
         passwordHash,
         firstName: 'Admin',
         lastName: 'B',
@@ -97,18 +120,18 @@ describe('Multi-Tenancy Security Tests', () => {
     const loginA = await request(app)
       .post('/api/v1/auth/login')
       .send({
-        email: 'admin@school.com',
+        email: `mtadmin-${testId}@school.com`,
         password: 'AdminPass123!',
-        schoolSlug: 'school-a',
+        schoolSlug: `mt-school-a-${testId}`,
       });
     adminAToken = loginA.body.data.accessToken;
 
     const loginB = await request(app)
       .post('/api/v1/auth/login')
       .send({
-        email: 'admin@school.com',
+        email: `mtadmin-${testId}@school.com`,
         password: 'AdminPass123!',
-        schoolSlug: 'school-b',
+        schoolSlug: `mt-school-b-${testId}`,
       });
     adminBToken = loginB.body.data.accessToken;
 
@@ -121,6 +144,10 @@ describe('Multi-Tenancy Security Tests', () => {
         startDate: '2025-01-01',
         endDate: '2025-04-01',
       });
+    if (!termRes.body.data) {
+      console.error('Term creation failed:', termRes.body);
+      throw new Error(`Term creation failed with status ${termRes.status}: ${JSON.stringify(termRes.body)}`);
+    }
     termAId = termRes.body.data.id;
 
     const locationRes = await request(app)
@@ -139,6 +166,9 @@ describe('Multi-Tenancy Security Tests', () => {
       .post('/api/v1/admin/instruments')
       .set('Authorization', `Bearer ${adminAToken}`)
       .send({ name: 'School A Piano' });
+    if (!instrumentRes.body.data) {
+      throw new Error(`Instrument creation failed with status ${instrumentRes.status}: ${JSON.stringify(instrumentRes.body)}`);
+    }
     instrumentAId = instrumentRes.body.data.id;
 
     const teacherRes = await request(app)
@@ -150,12 +180,18 @@ describe('Multi-Tenancy Security Tests', () => {
         lastName: 'A',
         instrumentIds: [instrumentAId],
       });
+    if (!teacherRes.body.data) {
+      throw new Error(`Teacher creation failed with status ${teacherRes.status}: ${JSON.stringify(teacherRes.body)}`);
+    }
     teacherAId = teacherRes.body.data.id;
 
     const familyRes = await request(app)
       .post('/api/v1/families')
       .set('Authorization', `Bearer ${adminAToken}`)
       .send({ name: 'Family A' });
+    if (!familyRes.body.data) {
+      throw new Error(`Family creation failed with status ${familyRes.status}: ${JSON.stringify(familyRes.body)}`);
+    }
     familyAId = familyRes.body.data.id;
 
     const studentRes = await request(app)
@@ -165,12 +201,19 @@ describe('Multi-Tenancy Security Tests', () => {
         firstName: 'Student',
         lastName: 'A',
         familyId: familyAId,
+        birthDate: '2015-01-01',
       });
+    if (!studentRes.body.data) {
+      throw new Error(`Student creation failed with status ${studentRes.status}: ${JSON.stringify(studentRes.body)}`);
+    }
     studentAId = studentRes.body.data.id;
   });
 
   afterAll(async () => {
-    // Clean up
+    // Clean up in correct order (respecting foreign keys)
+    await prisma.lessonEnrollment.deleteMany({});
+    await prisma.hybridLessonPattern.deleteMany({});
+    await prisma.lesson.deleteMany({});
     await prisma.teacherInstrument.deleteMany({});
     await prisma.teacher.deleteMany({});
     await prisma.student.deleteMany({});
@@ -346,6 +389,7 @@ describe('Multi-Tenancy Security Tests', () => {
           .send({
             firstName: 'Student',
             lastName: 'B',
+            birthDate: '2015-06-15',
           });
 
         const studentBId = studentBRes.body.data.id;
@@ -479,7 +523,7 @@ describe('Multi-Tenancy Security Tests', () => {
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${adminAToken}`);
 
-      expect(response.body.data.user.schoolName).toBe('School A');
+      expect(response.body.data.user.schoolName).toBe('MT School A');
     });
 
     it('Same email different schools should have different contexts', async () => {
@@ -491,8 +535,8 @@ describe('Multi-Tenancy Security Tests', () => {
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${adminBToken}`);
 
-      expect(meA.body.data.user.schoolName).toBe('School A');
-      expect(meB.body.data.user.schoolName).toBe('School B');
+      expect(meA.body.data.user.schoolName).toBe('MT School A');
+      expect(meB.body.data.user.schoolName).toBe('MT School B');
       expect(meA.body.data.user.id).not.toBe(meB.body.data.user.id);
     });
   });

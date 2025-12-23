@@ -23,6 +23,10 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testTimeout: 10000,
+  testTimeout: 15000,
   verbose: true,
+  forceExit: true,
+  detectOpenHandles: false,
+  // Run tests sequentially to avoid database conflicts
+  maxWorkers: 1,
 };

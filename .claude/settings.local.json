@@ -16,7 +16,8 @@
       "WebFetch(domain:reactjs.org)",
       "WebFetch(domain:nodejs.org)",
       "WebFetch(domain:expressjs.com)",
-      "WebFetch(domain:prisma.io)"
+      "WebFetch(domain:prisma.io)",
+      "Skill(qa)"
     ],
     "deny": [],
     "ask": [],

@@ -18,6 +18,12 @@ import ParentsPage from './pages/admin/ParentsPage';
 import StudentsPage from './pages/admin/StudentsPage';
 import FamiliesPage from './pages/admin/FamiliesPage';
 import MeetAndGreetPage from './pages/admin/MeetAndGreetPage';
+import LessonsPage from './pages/admin/LessonsPage';
+import LessonDetailPage from './pages/admin/LessonDetailPage';
+import CalendarPage from './pages/admin/CalendarPage';
+
+// Parent Pages
+import HybridBookingPage from './pages/parent/HybridBookingPage';
 
 // Public Pages
 import MeetAndGreetBookingPage from './pages/public/MeetAndGreetBookingPage';
@@ -107,6 +113,21 @@ function App() {
         <Route path="students" element={<StudentsPage />} />
         <Route path="families" element={<FamiliesPage />} />
         <Route path="meet-and-greet" element={<MeetAndGreetPage />} />
+        <Route path="lessons" element={<LessonsPage />} />
+        <Route path="lessons/:id" element={<LessonDetailPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
+      </Route>
+
+      {/* Parent Routes */}
+      <Route
+        path="/parent"
+        element={
+          <ProtectedRoute requiredRole="PARENT">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="hybrid-booking" element={<HybridBookingPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

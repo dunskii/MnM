@@ -173,11 +173,11 @@ export const parentsApi = {
 // ===========================================
 
 export const studentsApi = {
-  getAll: () =>
-    apiClient.get<ApiResponse<Student[]>>('/students').then((res) => res.data),
+  getAll: (): Promise<Student[]> =>
+    apiClient.get<{ status: string; data: Student[] }>('/students').then((res) => res.data),
 
-  getById: (id: string) =>
-    apiClient.get<ApiResponse<Student>>(`/students/${id}`).then((res) => res.data),
+  getById: (id: string): Promise<Student> =>
+    apiClient.get<{ status: string; data: Student }>(`/students/${id}`).then((res) => res.data),
 
   create: (data: {
     firstName: string;
@@ -185,7 +185,7 @@ export const studentsApi = {
     birthDate?: string;
     familyId?: string;
     notes?: string;
-  }) => apiClient.post<ApiResponse<Student>>('/students', data).then((res) => res.data),
+  }): Promise<Student> => apiClient.post<{ status: string; data: Student }>('/students', data).then((res) => res.data),
 
   update: (
     id: string,
@@ -196,17 +196,17 @@ export const studentsApi = {
       notes: string | null;
       isActive: boolean;
     }>
-  ) => apiClient.patch<ApiResponse<Student>>(`/students/${id}`, data).then((res) => res.data),
+  ): Promise<Student> => apiClient.patch<{ status: string; data: Student }>(`/students/${id}`, data).then((res) => res.data),
 
-  delete: (id: string) =>
-    apiClient.delete<ApiResponse<void>>(`/students/${id}`),
+  delete: (id: string): Promise<{ status: string }> =>
+    apiClient.delete<{ status: string }>(`/students/${id}`),
 
   // Family management
-  assignToFamily: (studentId: string, familyId: string) =>
-    apiClient.post<ApiResponse<Student>>(`/students/${studentId}/family`, { familyId }).then((res) => res.data),
+  assignToFamily: (studentId: string, familyId: string): Promise<Student> =>
+    apiClient.post<{ status: string; data: Student }>(`/students/${studentId}/family`, { familyId }).then((res) => res.data),
 
-  removeFromFamily: (studentId: string) =>
-    apiClient.delete<ApiResponse<Student>>(`/students/${studentId}/family`).then((res) => res.data),
+  removeFromFamily: (studentId: string): Promise<Student> =>
+    apiClient.delete<{ status: string; data: Student }>(`/students/${studentId}/family`).then((res) => res.data),
 };
 
 // ===========================================

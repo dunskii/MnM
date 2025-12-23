@@ -40,6 +40,7 @@ import {
   Logout,
   Settings,
   Handshake,
+  LibraryMusic,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -63,6 +64,9 @@ const navigationItems = [
   { label: 'Parents', path: '/admin/parents', icon: FamilyRestroom },
   { label: 'Students', path: '/admin/students', icon: School },
   { label: 'Families', path: '/admin/families', icon: Groups },
+  { divider: true },
+  { label: 'Lessons', path: '/admin/lessons', icon: LibraryMusic },
+  { label: 'Calendar', path: '/admin/calendar', icon: CalendarMonth },
 ];
 
 interface NavigationItem {

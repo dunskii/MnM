@@ -239,6 +239,10 @@ export function useDeleteParent() {
 // STUDENTS HOOKS
 // ===========================================
 
+/**
+ * Get all students
+ * Note: studentsApi already extracts .data from ApiResponse wrapper
+ */
 export function useStudents() {
   return useQuery({
     queryKey: userKeys.students(),
@@ -246,6 +250,10 @@ export function useStudents() {
   });
 }
 
+/**
+ * Get a single student by ID
+ * Note: studentsApi already extracts .data from ApiResponse wrapper
+ */
 export function useStudent(id: string) {
   return useQuery({
     queryKey: userKeys.student(id),

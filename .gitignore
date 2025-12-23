@@ -16,7 +16,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-*.log
+*.
+Logs/
 
 # IDE
 .vscode/
@@ -67,3 +68,6 @@ login
 *-service-account.json
 service-account*.json
 credentials*.json
+
+# Test Credentials
+.login

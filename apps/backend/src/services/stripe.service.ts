@@ -22,6 +22,8 @@ const STRIPE_CONSTANTS = {
 // ENVIRONMENT VALIDATION
 // ===========================================
 
+const STRIPE_CONFIGURED = Boolean(config.stripe.secretKey);
+
 function validateStripeConfig(): void {
   if (config.env === 'production') {
     if (!config.stripe.secretKey) {
@@ -33,15 +35,19 @@ function validateStripeConfig(): void {
     if (!config.stripe.publishableKey) {
       throw new Error('CRITICAL: STRIPE_PUBLISHABLE_KEY is required in production');
     }
+  } else if (!STRIPE_CONFIGURED) {
+    console.warn('⚠️  Stripe API key not configured - payment features will not work');
   }
 }
 
 // Validate on module load
 validateStripeConfig();
 
-// Initialize Stripe with secret key
+// Initialize Stripe with secret key (or placeholder for dev without keys)
 // API version is determined by the installed stripe package
-const stripe = new Stripe(config.stripe.secretKey || '');
+const stripe = STRIPE_CONFIGURED
+  ? new Stripe(config.stripe.secretKey!)
+  : null;
 
 // ===========================================
 // TYPES
@@ -65,11 +71,32 @@ interface CheckoutSessionResult {
 // ===========================================
 
 /**
+ * Check if Stripe is configured and available
+ */
+export function isStripeConfigured(): boolean {
+  return STRIPE_CONFIGURED && stripe !== null;
+}
+
+/**
+ * Throw error if Stripe is not configured
+ */
+function requireStripe(): Stripe {
+  if (!stripe) {
+    throw new AppError(
+      'Payment processing is not configured. Please contact the administrator.',
+      503
+    );
+  }
+  return stripe;
+}
+
+/**
  * Create a Stripe Checkout session for registration payment
  */
 export async function createCheckoutSession(
   params: CreateCheckoutSessionParams
 ): Promise<CheckoutSessionResult> {
+  const stripeClient = requireStripe();
   const { meetAndGreetId, schoolId, successUrl, cancelUrl } = params;
 
   // Verify meet & greet exists and is approved
@@ -115,7 +142,7 @@ export async function createCheckoutSession(
   if (recentPendingPayment && recentPendingPayment.stripeSessionId) {
     // Return existing session if still valid
     try {
-      const existingSession = await stripe.checkout.sessions.retrieve(
+      const existingSession = await stripeClient.checkout.sessions.retrieve(
         recentPendingPayment.stripeSessionId
       );
       if (existingSession.status === 'open' && existingSession.url) {
@@ -194,7 +221,7 @@ export async function createCheckoutSession(
   // Generate idempotency key for this checkout attempt
   const idempotencyKey = `checkout_${meetAndGreetId}_${Date.now()}`;
 
-  const session = await stripe.checkout.sessions.create(sessionConfig, {
+  const session = await stripeClient.checkout.sessions.create(sessionConfig, {
     idempotencyKey,
   });
 
@@ -232,7 +259,8 @@ export async function createCheckoutSession(
 export async function verifyCheckoutSession(
   sessionId: string
 ): Promise<{ meetAndGreetId: string; paymentIntentId: string; amount: number }> {
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const stripeClient = requireStripe();
+  const session = await stripeClient.checkout.sessions.retrieve(sessionId);
 
   if (session.payment_status !== 'paid') {
     throw new AppError('Payment not completed', 400);
@@ -263,10 +291,11 @@ export async function handleWebhookEvent(
     throw new AppError('Webhook secret not configured', 500);
   }
 
+  const stripeClient = requireStripe();
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    event = stripeClient.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err) {
     throw new AppError(`Webhook signature verification failed`, 400);
   }
@@ -390,6 +419,7 @@ export async function createConnectOnboardingLink(
   refreshUrl: string,
   returnUrl: string
 ): Promise<string> {
+  const stripeClient = requireStripe();
   const school = await prisma.school.findUnique({
     where: { id: schoolId },
   });
@@ -402,7 +432,7 @@ export async function createConnectOnboardingLink(
 
   // Create a connected account if one doesn't exist
   if (!accountId) {
-    const account = await stripe.accounts.create({
+    const account = await stripeClient.accounts.create({
       type: 'standard',
       country: 'AU',
       email: school.email || undefined,
@@ -425,7 +455,7 @@ export async function createConnectOnboardingLink(
   }
 
   // Create the onboarding link
-  const accountLink = await stripe.accountLinks.create({
+  const accountLink = await stripeClient.accountLinks.create({
     account: accountId,
     refresh_url: refreshUrl,
     return_url: returnUrl,
@@ -450,7 +480,8 @@ export async function checkConnectAccountStatus(
     return { connected: false, chargesEnabled: false, payoutsEnabled: false };
   }
 
-  const account = await stripe.accounts.retrieve(school.stripeAccountId);
+  const stripeClient = requireStripe();
+  const account = await stripeClient.accounts.retrieve(school.stripeAccountId);
 
   return {
     connected: true,
@@ -461,6 +492,7 @@ export async function checkConnectAccountStatus(
 
 // Export all functions as a service object
 export const stripeService = {
+  isStripeConfigured,
   createCheckoutSession,
   verifyCheckoutSession,
   handleWebhookEvent,

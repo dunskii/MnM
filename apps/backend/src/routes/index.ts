@@ -10,6 +10,9 @@ import teachersRoutes from './teachers.routes';
 import parentsRoutes from './parents.routes';
 import studentsRoutes from './students.routes';
 import familiesRoutes from './families.routes';
+import lessonsRoutes from './lessons.routes';
+import hybridBookingRoutes from './hybridBooking.routes';
+import calendarRoutes from './calendar.routes';
 import meetAndGreetRoutes from './meetAndGreet.routes';
 import paymentRoutes from './payment.routes';
 import registrationRoutes from './registration.routes';
@@ -43,9 +46,11 @@ router.use('/teachers', csrfProtection, teachersRoutes);
 router.use('/parents', csrfProtection, parentsRoutes);
 router.use('/students', csrfProtection, studentsRoutes);
 router.use('/families', csrfProtection, familiesRoutes);
+router.use('/lessons', csrfProtection, lessonsRoutes);
+router.use('/hybrid-bookings', csrfProtection, hybridBookingRoutes);
+router.use('/calendar', csrfProtection, calendarRoutes);
 
 // Future routes will be added here:
-// router.use('/lessons', lessonRoutes);
 // router.use('/attendance', attendanceRoutes);
 // router.use('/invoices', invoiceRoutes);
 

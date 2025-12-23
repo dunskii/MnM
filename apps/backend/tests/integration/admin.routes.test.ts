@@ -4,19 +4,27 @@
 
 import request from 'supertest';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
-// Create test app
+// Create test app without CSRF protection for integration tests
 const createTestApp = () => {
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
 
-  const routes = require('../../src/routes').default;
+  // Import individual route modules to avoid CSRF protection
+  const authRoutes = require('../../src/routes/auth.routes').default;
+  const adminRoutes = require('../../src/routes/admin.routes').default;
+  const parentsRoutes = require('../../src/routes/parents.routes').default;
   const { errorHandler } = require('../../src/middleware/errorHandler');
   const { notFound } = require('../../src/middleware/notFound');
 
-  app.use('/api/v1', routes);
+  // Mount routes without CSRF
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/admin', adminRoutes);
+  app.use('/api/v1/parents', parentsRoutes);
   app.use(notFound);
   app.use(errorHandler);
 
@@ -327,8 +335,6 @@ describe('Admin Routes Integration Tests', () => {
   });
 
   describe('Lesson Types API', () => {
-    let lessonType1Id: string;
-
     describe('POST /api/v1/admin/lesson-types', () => {
       it('should create a lesson type for the admin\'s school', async () => {
         const response = await request(app)
@@ -343,7 +349,7 @@ describe('Admin Routes Integration Tests', () => {
         expect(response.status).toBe(201);
         expect(response.body.data.name).toBe('Individual Piano');
         expect(response.body.data.type).toBe('INDIVIDUAL');
-        lessonType1Id = response.body.data.id;
+        expect(response.body.data.id).toBeDefined();
       });
     });
 
@@ -414,10 +420,10 @@ describe('Admin Routes Integration Tests', () => {
   describe('Parents API', () => {
     let parent1Id: string;
 
-    describe('POST /api/v1/admin/parents', () => {
+    describe('POST /api/v1/parents', () => {
       it('should create a parent for the admin\'s school', async () => {
         const response = await request(app)
-          .post('/api/v1/admin/parents')
+          .post('/api/v1/parents')
           .set('Authorization', `Bearer ${admin1Token}`)
           .send({
             email: 'parent@testschool.com',
@@ -441,7 +447,7 @@ describe('Admin Routes Integration Tests', () => {
 
       it('should auto-create family for parent', async () => {
         const response = await request(app)
-          .get(`/api/v1/admin/parents/${parent1Id}`)
+          .get(`/api/v1/parents/${parent1Id}`)
           .set('Authorization', `Bearer ${admin1Token}`);
 
         expect(response.status).toBe(200);
@@ -451,7 +457,7 @@ describe('Admin Routes Integration Tests', () => {
 
       it('should reject duplicate email in same school', async () => {
         const response = await request(app)
-          .post('/api/v1/admin/parents')
+          .post('/api/v1/parents')
           .set('Authorization', `Bearer ${admin1Token}`)
           .send({
             email: 'parent@testschool.com', // Same email
@@ -470,11 +476,11 @@ describe('Admin Routes Integration Tests', () => {
       });
     });
 
-    describe('GET /api/v1/admin/parents', () => {
+    describe('GET /api/v1/parents', () => {
       it('should only return parents for the admin\'s school', async () => {
         // Admin 1 should see their parent
         const response1 = await request(app)
-          .get('/api/v1/admin/parents')
+          .get('/api/v1/parents')
           .set('Authorization', `Bearer ${admin1Token}`);
 
         expect(response1.status).toBe(200);
@@ -482,7 +488,7 @@ describe('Admin Routes Integration Tests', () => {
 
         // Admin 2 should see no parents
         const response2 = await request(app)
-          .get('/api/v1/admin/parents')
+          .get('/api/v1/parents')
           .set('Authorization', `Bearer ${admin2Token}`);
 
         expect(response2.status).toBe(200);
@@ -493,7 +499,7 @@ describe('Admin Routes Integration Tests', () => {
     describe('Multi-tenancy for parents', () => {
       it('should not allow access to parent from different school', async () => {
         const response = await request(app)
-          .get(`/api/v1/admin/parents/${parent1Id}`)
+          .get(`/api/v1/parents/${parent1Id}`)
           .set('Authorization', `Bearer ${admin2Token}`);
 
         expect(response.status).toBe(404);
@@ -501,7 +507,7 @@ describe('Admin Routes Integration Tests', () => {
 
       it('should not allow update of parent from different school', async () => {
         const response = await request(app)
-          .patch(`/api/v1/admin/parents/${parent1Id}`)
+          .patch(`/api/v1/parents/${parent1Id}`)
           .set('Authorization', `Bearer ${admin2Token}`)
           .send({ firstName: 'Hacked' });
 
@@ -510,17 +516,17 @@ describe('Admin Routes Integration Tests', () => {
 
       it('should not allow delete of parent from different school', async () => {
         const response = await request(app)
-          .delete(`/api/v1/admin/parents/${parent1Id}`)
+          .delete(`/api/v1/parents/${parent1Id}`)
           .set('Authorization', `Bearer ${admin2Token}`);
 
         expect(response.status).toBe(404);
       });
     });
 
-    describe('PATCH /api/v1/admin/parents/:id', () => {
+    describe('PATCH /api/v1/parents/:id', () => {
       it('should update parent for owner school', async () => {
         const response = await request(app)
-          .patch(`/api/v1/admin/parents/${parent1Id}`)
+          .patch(`/api/v1/parents/${parent1Id}`)
           .set('Authorization', `Bearer ${admin1Token}`)
           .send({ contact1Name: 'Updated Contact' });
 

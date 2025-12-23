@@ -47,6 +47,9 @@ describe('Authentication API', () => {
   let userId: string;
 
   beforeAll(async () => {
+    // Clear any existing login attempts to prevent rate limiting
+    await prisma.loginAttempt.deleteMany({});
+
     // Create test school
     const school = await prisma.school.create({
       data: TEST_SCHOOL,
@@ -292,15 +295,17 @@ describe('Authentication API', () => {
 
   describe('Multi-tenancy Security', () => {
     const app = createTestApp();
+    const testId = Date.now().toString();
     let otherSchoolId: string;
+    const otherSchoolSlug = `auth-other-school-${testId}`;
 
     beforeAll(async () => {
       // Create another school with same email user
       const otherSchool = await prisma.school.create({
         data: {
-          name: 'Other School',
-          slug: 'other-school',
-          email: 'other@otherschool.com',
+          name: 'Auth Other School',
+          slug: otherSchoolSlug,
+          email: `auth-other-${testId}@otherschool.com`,
         },
       });
       otherSchoolId = otherSchool.id;
@@ -321,6 +326,8 @@ describe('Authentication API', () => {
     });
 
     afterAll(async () => {
+      await prisma.refreshToken.deleteMany({ where: { user: { schoolId: otherSchoolId } } });
+      await prisma.loginAttempt.deleteMany({ where: { user: { schoolId: otherSchoolId } } });
       await prisma.user.deleteMany({ where: { schoolId: otherSchoolId } });
       await prisma.school.deleteMany({ where: { id: otherSchoolId } });
     });
@@ -357,11 +364,11 @@ describe('Authentication API', () => {
         .send({
           email: TEST_USER.email,
           password: 'OtherPassword123!',
-          schoolSlug: 'other-school',
+          schoolSlug: otherSchoolSlug,
         });
 
       expect(response2.status).toBe(200);
-      expect(response2.body.data.user.schoolName).toBe('Other School');
+      expect(response2.body.data.user.schoolName).toBe('Auth Other School');
     });
 
     it('should not allow cross-school password', async () => {
@@ -371,7 +378,7 @@ describe('Authentication API', () => {
         .send({
           email: TEST_USER.email,
           password: TEST_USER.password, // Wrong password for other school
-          schoolSlug: 'other-school',
+          schoolSlug: otherSchoolSlug,
         });
 
       expect(response.status).toBe(401);

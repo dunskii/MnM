@@ -65,6 +65,15 @@ interface CheckoutSessionResult {
   url: string;
 }
 
+interface CreateInvoiceCheckoutParams {
+  invoiceId: string;
+  schoolId: string;
+  amount: number; // in cents
+  description: string;
+  customerEmail: string;
+  successUrl: string;
+  cancelUrl: string;
+}
 
 // ===========================================
 // SERVICE FUNCTIONS
@@ -279,6 +288,83 @@ export async function verifyCheckoutSession(
 }
 
 /**
+ * Create a Stripe Checkout session for invoice payment
+ */
+export async function createInvoiceCheckoutSession(
+  params: CreateInvoiceCheckoutParams
+): Promise<CheckoutSessionResult> {
+  const stripeClient = requireStripe();
+  const { invoiceId, schoolId, amount, description, customerEmail, successUrl, cancelUrl } = params;
+
+  // Get school for name and connected account
+  const school = await prisma.school.findUnique({
+    where: { id: schoolId },
+    select: { name: true, stripeAccountId: true },
+  });
+
+  if (!school) {
+    throw new AppError('School not found', 404);
+  }
+
+  // Create the checkout session
+  const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+    mode: 'payment',
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: STRIPE_CONSTANTS.CURRENCY,
+          product_data: {
+            name: `Invoice Payment - ${school.name}`,
+            description: description,
+            metadata: {
+              type: 'invoice_payment',
+              invoiceId: invoiceId,
+            },
+          },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      type: 'invoice_payment',
+      invoiceId: invoiceId,
+      schoolId: schoolId,
+    },
+    customer_email: customerEmail,
+    success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: cancelUrl,
+  };
+
+  // If school has connected Stripe account, route payment to them
+  if (school.stripeAccountId) {
+    sessionConfig.payment_intent_data = {
+      application_fee_amount: Math.round(amount * STRIPE_CONSTANTS.PLATFORM_FEE_PERCENT),
+      transfer_data: {
+        destination: school.stripeAccountId,
+      },
+    };
+  }
+
+  // Generate idempotency key
+  const idempotencyKey = `invoice_checkout_${invoiceId}_${Date.now()}`;
+
+  const session = await stripeClient.checkout.sessions.create(sessionConfig, {
+    idempotencyKey,
+  });
+
+  if (!session.url) {
+    throw new AppError('Failed to create checkout session', 500);
+  }
+
+  return {
+    sessionId: session.id,
+    url: session.url,
+  };
+}
+
+/**
  * Handle Stripe webhook events
  */
 export async function handleWebhookEvent(
@@ -304,7 +390,14 @@ export async function handleWebhookEvent(
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-      await handleCheckoutComplete(session);
+      const paymentType = session.metadata?.type;
+
+      if (paymentType === 'invoice_payment') {
+        await handleInvoicePaymentComplete(session);
+      } else {
+        // Default to registration payment handling
+        await handleCheckoutComplete(session);
+      }
       break;
     }
     case 'payment_intent.succeeded': {
@@ -322,6 +415,76 @@ export async function handleWebhookEvent(
   }
 
   return { received: true, type: event.type };
+}
+
+/**
+ * Handle completed invoice payment
+ */
+async function handleInvoicePaymentComplete(
+  session: Stripe.Checkout.Session
+): Promise<void> {
+  const invoiceId = session.metadata?.invoiceId;
+  const schoolId = session.metadata?.schoolId;
+
+  if (!invoiceId || !schoolId) {
+    console.error('[Stripe Webhook] Missing invoice metadata in checkout session:', session.id);
+    return;
+  }
+
+  // Check if payment already recorded (idempotency)
+  const existingPayment = await prisma.payment.findFirst({
+    where: { stripePaymentId: session.payment_intent as string },
+  });
+
+  if (existingPayment) {
+    console.log('[Stripe Webhook] Invoice payment already recorded:', session.payment_intent);
+    return;
+  }
+
+  // Get invoice to update
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { id: true, total: true, amountPaid: true },
+  });
+
+  if (!invoice) {
+    console.error('[Stripe Webhook] Invoice not found:', invoiceId);
+    return;
+  }
+
+  // Record payment and update invoice in transaction
+  await prisma.$transaction(async (tx) => {
+    // Create payment record
+    const paymentAmount = (session.amount_total || 0) / 100; // Convert cents to dollars
+
+    await tx.payment.create({
+      data: {
+        invoiceId,
+        amount: paymentAmount,
+        method: 'STRIPE',
+        stripePaymentId: session.payment_intent as string,
+        paidAt: new Date(),
+      },
+    });
+
+    // Calculate new amount paid
+    const currentPaid = Number(invoice.amountPaid);
+    const total = Number(invoice.total);
+    const newAmountPaid = currentPaid + paymentAmount;
+    const isPaidInFull = newAmountPaid >= total - 0.01; // Allow small rounding errors
+
+    // Update invoice
+    await tx.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        amountPaid: newAmountPaid,
+        status: isPaidInFull ? 'PAID' : 'PARTIALLY_PAID',
+        paidAt: isPaidInFull ? new Date() : null,
+      },
+    });
+  });
+
+  console.log(`[Stripe Webhook] Invoice payment recorded: ${invoiceId}, amount: $${(session.amount_total || 0) / 100}`);
 }
 
 /**
@@ -494,6 +657,7 @@ export async function checkConnectAccountStatus(
 export const stripeService = {
   isStripeConfigured,
   createCheckoutSession,
+  createInvoiceCheckoutSession,
   verifyCheckoutSession,
   handleWebhookEvent,
   getPublishableKey,

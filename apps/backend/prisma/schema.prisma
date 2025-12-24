@@ -882,3 +882,40 @@ model SchoolRetentionPolicy {
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
+
+// ===========================================
+// FINANCIAL AUDIT LOG
+// ===========================================
+
+enum FinancialAuditAction {
+  INVOICE_CREATED
+  INVOICE_UPDATED
+  INVOICE_DELETED
+  INVOICE_SENT
+  INVOICE_CANCELLED
+  PAYMENT_RECORDED
+  PAYMENT_STRIPE
+  PAYMENT_REFUNDED
+  PRICING_PACKAGE_CREATED
+  PRICING_PACKAGE_UPDATED
+  PRICING_PACKAGE_DELETED
+}
+
+model FinancialAuditLog {
+  id          String               @id @default(uuid())
+  schoolId    String
+  action      FinancialAuditAction
+  performedBy String? // User ID who performed the action
+  entityType  String // 'invoice', 'payment', 'pricing_package'
+  entityId    String // ID of the affected entity
+  details     Json                 @default("{}") // Action-specific details
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime             @default(now())
+
+  @@index([schoolId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([performedBy])
+  @@index([createdAt])
+}

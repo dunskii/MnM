@@ -589,3 +589,316 @@ export async function sendPaymentReceipt(
     html: baseTemplate(content, `Your payment of ${data.amount} has been received. Receipt #${data.receiptNumber}`),
   });
 }
+
+// ===========================================
+// INVOICE EMAILS
+// ===========================================
+
+interface InvoiceEmailData {
+  parentName: string;
+  schoolName: string;
+  invoiceNumber: string;
+  total: number;
+  dueDate: Date;
+  description: string;
+}
+
+interface PaymentReceiptEmailData {
+  parentName: string;
+  schoolName: string;
+  invoiceNumber: string;
+  amount: number;
+  paymentMethod: string;
+  reference?: string;
+  remainingBalance: number;
+}
+
+interface PaymentReminderData {
+  parentName: string;
+  schoolName: string;
+  invoiceNumber: string;
+  total: number;
+  amountDue: number;
+  dueDate: Date;
+  paymentUrl: string;
+}
+
+/**
+ * Send invoice notification to parent
+ */
+export async function sendInvoiceEmail(
+  to: string,
+  data: InvoiceEmailData
+): Promise<boolean> {
+  const formattedTotal = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(data.total);
+
+  const formattedDueDate = new Intl.DateTimeFormat('en-AU', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(data.dueDate));
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      New Invoice from ${data.schoolName}
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      A new invoice has been created for your account. Here are the details:
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Invoice #:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Description:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.description}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Due Date:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${formattedDueDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0 0; color: #080808; font-size: 16px; border-top: 1px solid #e0e0e0;"><strong>Total Amount:</strong></td>
+          <td style="padding: 8px 0 0; color: #4580E4; font-size: 18px; font-weight: 600; text-align: right; border-top: 1px solid #e0e0e0;">${formattedTotal}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${ctaButton('View & Pay Invoice', `${config.frontendUrl}/parent/invoices`)}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      Please pay by the due date to avoid any late fees. If you have any questions, please contact us.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `New Invoice ${data.invoiceNumber} - ${data.schoolName}`,
+    html: baseTemplate(content, `New invoice ${data.invoiceNumber} for ${formattedTotal} due ${formattedDueDate}`),
+  });
+}
+
+/**
+ * Send payment receipt for invoice payment
+ */
+export async function sendPaymentReceiptEmail(
+  to: string,
+  data: PaymentReceiptEmailData
+): Promise<boolean> {
+  const formattedAmount = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(data.amount);
+
+  const formattedBalance = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(data.remainingBalance);
+
+  const paymentMethodDisplay = {
+    STRIPE: 'Credit Card',
+    BANK_TRANSFER: 'Bank Transfer',
+    CASH: 'Cash',
+    CHECK: 'Cheque',
+    OTHER: 'Other',
+  }[data.paymentMethod] || data.paymentMethod;
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Payment Received - Thank You!
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      We've received your payment. Thank you!
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Invoice #:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Payment Method:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${paymentMethodDisplay}</td>
+        </tr>
+        ${data.reference ? `
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Reference:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.reference}</td>
+        </tr>
+        ` : ''}
+        <tr>
+          <td style="padding: 8px 0 0; color: #080808; font-size: 16px; border-top: 1px solid #e0e0e0;"><strong>Amount Paid:</strong></td>
+          <td style="padding: 8px 0 0; color: #96DAC9; font-size: 18px; font-weight: 600; text-align: right; border-top: 1px solid #e0e0e0;">${formattedAmount}</td>
+        </tr>
+        ${data.remainingBalance > 0 ? `
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Remaining Balance:</strong></td>
+          <td style="padding: 4px 0; color: #ff4040; font-size: 14px; text-align: right;">${formattedBalance}</td>
+        </tr>
+        ` : `
+        <tr>
+          <td colspan="2" style="padding: 8px 0 0; text-align: center;">
+            <span style="background-color: #96DAC9; color: #080808; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+              PAID IN FULL
+            </span>
+          </td>
+        </tr>
+        `}
+      </table>
+    </div>
+
+    <p style="margin: 15px 0 0; color: #9DA5AF; font-size: 13px;">
+      Please keep this email for your records.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Payment Received - Invoice ${data.invoiceNumber}`,
+    html: baseTemplate(content, `Your payment of ${formattedAmount} for invoice ${data.invoiceNumber} has been received`),
+  });
+}
+
+/**
+ * Send payment reminder before due date
+ */
+export async function sendPaymentReminderEmail(
+  to: string,
+  data: PaymentReminderData
+): Promise<boolean> {
+  const formattedAmount = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(data.amountDue);
+
+  const formattedDueDate = new Intl.DateTimeFormat('en-AU', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(data.dueDate));
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Payment Reminder
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      This is a friendly reminder that your invoice is due soon.
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Invoice #:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Due Date:</strong></td>
+          <td style="padding: 4px 0; color: #FFCE00; font-size: 14px; font-weight: 600; text-align: right;">${formattedDueDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0 0; color: #080808; font-size: 16px; border-top: 1px solid #e0e0e0;"><strong>Amount Due:</strong></td>
+          <td style="padding: 8px 0 0; color: #4580E4; font-size: 18px; font-weight: 600; text-align: right; border-top: 1px solid #e0e0e0;">${formattedAmount}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${ctaButton('Pay Now', data.paymentUrl)}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you've already made this payment, please disregard this reminder.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Payment Reminder - Invoice ${data.invoiceNumber} Due ${formattedDueDate}`,
+    html: baseTemplate(content, `Reminder: Invoice ${data.invoiceNumber} for ${formattedAmount} is due ${formattedDueDate}`),
+  });
+}
+
+/**
+ * Send overdue notice
+ */
+export async function sendOverdueNoticeEmail(
+  to: string,
+  data: PaymentReminderData
+): Promise<boolean> {
+  const formattedAmount = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(data.amountDue);
+
+  const formattedDueDate = new Intl.DateTimeFormat('en-AU', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(data.dueDate));
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #ff4040; font-size: 22px; font-weight: 600;">
+      Invoice Overdue
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Your invoice is now past due. Please make payment at your earliest convenience to avoid any service interruptions.
+    </p>
+
+    <div style="background-color: #FFAE9E; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Invoice #:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Due Date:</strong></td>
+          <td style="padding: 4px 0; color: #ff4040; font-size: 14px; font-weight: 600; text-align: right;">${formattedDueDate} (OVERDUE)</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0 0; color: #080808; font-size: 16px; border-top: 1px solid #e0e0e0;"><strong>Amount Due:</strong></td>
+          <td style="padding: 8px 0 0; color: #ff4040; font-size: 18px; font-weight: 600; text-align: right; border-top: 1px solid #e0e0e0;">${formattedAmount}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${ctaButton('Pay Now', data.paymentUrl, '#ff4040')}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you're experiencing difficulties, please contact us to discuss payment arrangements.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `OVERDUE: Invoice ${data.invoiceNumber} - Payment Required`,
+    html: baseTemplate(content, `OVERDUE: Invoice ${data.invoiceNumber} for ${formattedAmount} requires immediate payment`),
+  });
+}

@@ -53,6 +53,11 @@ export const parentOrAbove = authorize(
 );
 
 /**
+ * Shorthand middleware for parent-only routes
+ */
+export const parentOnly = authorize(UserRole.PARENT);
+
+/**
  * Middleware to ensure user can only access their own resources
  * or resources within their school
  *

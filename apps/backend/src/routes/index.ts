@@ -19,6 +19,7 @@ import registrationRoutes from './registration.routes';
 import attendanceRoutes from './attendance.routes';
 import notesRoutes from './notes.routes';
 import resourcesRoutes from './resources.routes';
+import invoicesRoutes from './invoices.routes';
 
 const router = Router();
 
@@ -55,8 +56,6 @@ router.use('/calendar', csrfProtection, calendarRoutes);
 router.use('/attendance', csrfProtection, attendanceRoutes);
 router.use('/notes', csrfProtection, notesRoutes);
 router.use('/resources', csrfProtection, resourcesRoutes);
-
-// Future routes will be added here:
-// router.use('/invoices', invoiceRoutes);
+router.use('/invoices', csrfProtection, invoicesRoutes);
 
 export default router;

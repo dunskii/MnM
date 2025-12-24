@@ -28,3 +28,7 @@ export * as stripeService from './stripe.service';
 
 // Registration
 export * as registrationService from './registration.service';
+
+// Invoicing
+export * as invoiceService from './invoice.service';
+export * as pricingPackageService from './pricingPackage.service';

@@ -34,6 +34,9 @@ import {
   Folder as FolderIcon,
   ArrowForward as ArrowForwardIcon,
   CalendarToday as CalendarIcon,
+  Receipt as ReceiptIcon,
+  Payment as PaymentIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { format, isSameDay, addDays, startOfWeek } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +51,8 @@ import { HybridBooking, formatTimeSlot, getBookingStatusColor } from '../../api/
 import { Note } from '../../api/notes.api';
 import { Resource, formatFileSize } from '../../api/resources.api';
 import { Lesson, getDayName, formatTime } from '../../api/lessons.api';
+import { useParentInvoices } from '../../hooks/useInvoices';
+import { Invoice, InvoiceStatus } from '../../api/invoices.api';
 
 // ===========================================
 // STAT CARD COMPONENT
@@ -380,6 +385,142 @@ function RecentResources({ resources, isLoading, onViewAll }: RecentResourcesPro
 }
 
 // ===========================================
+// INVOICES WIDGET COMPONENT
+// ===========================================
+
+interface InvoicesWidgetProps {
+  invoices: Invoice[];
+  isLoading: boolean;
+  onViewAll: () => void;
+  onPay: () => void;
+}
+
+function formatCurrency(value: string | number): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(num);
+}
+
+const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string }> = {
+  DRAFT: { bg: '#FCF6E6', text: '#9DA5AF' },
+  SENT: { bg: '#a3d9f6', text: '#4580E4' },
+  PAID: { bg: '#96DAC9', text: '#080808' },
+  PARTIALLY_PAID: { bg: '#FFCE00', text: '#080808' },
+  OVERDUE: { bg: '#FFAE9E', text: '#ff4040' },
+  CANCELLED: { bg: '#e0e0e0', text: '#9DA5AF' },
+  REFUNDED: { bg: '#e0e0e0', text: '#9DA5AF' },
+};
+
+function InvoicesWidget({ invoices, isLoading, onViewAll, onPay }: InvoicesWidgetProps) {
+  if (isLoading) {
+    return <Skeleton variant="rectangular" height={150} />;
+  }
+
+  // Filter to unpaid invoices
+  const unpaidInvoices = invoices.filter(
+    (i) => i.status === 'SENT' || i.status === 'PARTIALLY_PAID' || i.status === 'OVERDUE'
+  );
+
+  const totalOutstanding = unpaidInvoices.reduce(
+    (sum, i) => sum + parseFloat(i.total) - parseFloat(i.amountPaid),
+    0
+  );
+
+  const overdueCount = invoices.filter((i) => i.status === 'OVERDUE').length;
+
+  if (unpaidInvoices.length === 0) {
+    return (
+      <Alert severity="success" icon={<ReceiptIcon />}>
+        All invoices are paid! No outstanding balance.
+      </Alert>
+    );
+  }
+
+  return (
+    <Box>
+      {/* Outstanding Balance Summary */}
+      <Box
+        sx={{
+          p: 2,
+          bgcolor: overdueCount > 0 ? '#FFAE9E' : '#FCF6E6',
+          borderRadius: 1,
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Outstanding Balance
+            </Typography>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              {formatCurrency(totalOutstanding)}
+            </Typography>
+            {overdueCount > 0 && (
+              <Chip
+                icon={<WarningIcon />}
+                label={`${overdueCount} overdue`}
+                color="error"
+                size="small"
+                sx={{ mt: 1 }}
+              />
+            )}
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PaymentIcon />}
+            onClick={onPay}
+          >
+            Pay Now
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Recent Invoices List */}
+      <List disablePadding>
+        {unpaidInvoices.slice(0, 3).map((invoice) => (
+          <Paper key={invoice.id} variant="outlined" sx={{ p: 1.5, mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  {invoice.invoiceNumber}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {invoice.description || invoice.term?.name || 'Invoice'} | Due:{' '}
+                  {format(new Date(invoice.dueDate), 'MMM d')}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="body2" fontWeight="medium">
+                  {formatCurrency(parseFloat(invoice.total) - parseFloat(invoice.amountPaid))}
+                </Typography>
+                <Chip
+                  label={invoice.status.replace('_', ' ')}
+                  size="small"
+                  sx={{
+                    backgroundColor: STATUS_COLORS[invoice.status].bg,
+                    color: STATUS_COLORS[invoice.status].text,
+                    fontSize: '0.65rem',
+                  }}
+                />
+              </Box>
+            </Box>
+          </Paper>
+        ))}
+      </List>
+
+      {unpaidInvoices.length > 3 && (
+        <Button size="small" endIcon={<ArrowForwardIcon />} onClick={onViewAll}>
+          View All ({unpaidInvoices.length} invoices)
+        </Button>
+      )}
+    </Box>
+  );
+}
+
+// ===========================================
 // MAIN COMPONENT
 // ===========================================
 
@@ -412,6 +553,7 @@ export default function ParentDashboardPage() {
   const { data: bookingsData, isLoading: bookingsLoading } = useMyBookings();
   const { data: notesData, isLoading: notesLoading } = useNotesByStudent(selectedStudentId);
   const { data: resourcesData, isLoading: resourcesLoading } = useResourcesByStudent(selectedStudentId);
+  const { data: invoicesData, isLoading: invoicesLoading } = useParentInvoices();
 
   // Calculate stats
   const todayDayOfWeek = new Date().getDay();
@@ -526,8 +668,26 @@ export default function ParentDashboardPage() {
           </Card>
         </Grid>
 
-        {/* Quick Actions */}
+        {/* Quick Actions & Invoices */}
         <Grid item xs={12} lg={6}>
+          {/* Invoices Widget */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <ReceiptIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Invoices & Payments
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <InvoicesWidget
+                invoices={invoicesData || []}
+                isLoading={invoicesLoading}
+                onViewAll={() => navigate('/parent/invoices')}
+                onPay={() => navigate('/parent/invoices')}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -544,10 +704,10 @@ export default function ParentDashboardPage() {
                 </Button>
                 <Button
                   variant="outlined"
-                  startIcon={<ScheduleIcon />}
-                  onClick={() => navigate('/parent/schedule')}
+                  startIcon={<ReceiptIcon />}
+                  onClick={() => navigate('/parent/invoices')}
                 >
-                  View Full Schedule
+                  View Invoices
                 </Button>
               </Stack>
             </CardContent>

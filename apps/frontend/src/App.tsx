@@ -21,6 +21,8 @@ import MeetAndGreetPage from './pages/admin/MeetAndGreetPage';
 import LessonsPage from './pages/admin/LessonsPage';
 import LessonDetailPage from './pages/admin/LessonDetailPage';
 import CalendarPage from './pages/admin/CalendarPage';
+import InvoicesPage from './pages/admin/InvoicesPage';
+import InvoiceDetailPage from './pages/admin/InvoiceDetailPage';
 
 // Teacher Pages
 import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
@@ -28,6 +30,7 @@ import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
 // Parent Pages
 import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 import HybridBookingPage from './pages/parent/HybridBookingPage';
+import ParentInvoicesPage from './pages/parent/InvoicesPage';
 
 // Public Pages
 import MeetAndGreetBookingPage from './pages/public/MeetAndGreetBookingPage';
@@ -121,6 +124,8 @@ function App() {
         <Route path="lessons" element={<LessonsPage />} />
         <Route path="lessons/:id" element={<LessonDetailPage />} />
         <Route path="calendar" element={<CalendarPage />} />
+        <Route path="invoices" element={<InvoicesPage />} />
+        <Route path="invoices/:id" element={<InvoiceDetailPage />} />
       </Route>
 
       {/* Teacher Routes */}
@@ -146,6 +151,7 @@ function App() {
       >
         <Route index element={<ErrorBoundary><ParentDashboardPage /></ErrorBoundary>} />
         <Route path="hybrid-booking" element={<ErrorBoundary><HybridBookingPage /></ErrorBoundary>} />
+        <Route path="invoices" element={<ErrorBoundary><ParentInvoicesPage /></ErrorBoundary>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

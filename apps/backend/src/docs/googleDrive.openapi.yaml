@@ -1,0 +1,1021 @@
+# ===========================================
+# Google Drive API - OpenAPI 3.0 Documentation
+# ===========================================
+# Endpoints for OAuth, folder management, file operations, and sync
+# All endpoints require authentication and respect multi-tenancy
+
+openapi: 3.0.3
+info:
+  title: Music 'n Me - Google Drive API
+  description: |
+    API endpoints for Google Drive integration including:
+    - OAuth 2.0 authentication flow
+    - Folder browsing and linking
+    - File management with visibility controls
+    - Background sync operations
+
+    **Security**: All endpoints require JWT authentication and filter by schoolId for multi-tenancy.
+
+    **Rate Limiting**: 100 requests per minute per school to avoid Google API quota limits.
+
+    **Caching**: Folder and file listings are cached for 5 minutes.
+  version: 1.0.0
+  contact:
+    name: Music 'n Me API Support
+    email: support@musicnme.com.au
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: OAuth
+    description: Google Drive OAuth authentication
+  - name: Folders
+    description: Folder browsing and mapping
+  - name: Files
+    description: File operations
+  - name: Sync
+    description: Sync management
+
+paths:
+  # ===========================================
+  # OAuth Authentication
+  # ===========================================
+
+  /google-drive/auth/url:
+    get:
+      tags:
+        - OAuth
+      summary: Get OAuth authorization URL
+      description: |
+        Generates a Google OAuth 2.0 authorization URL for admin to authorize Google Drive access.
+        The state parameter includes schoolId for CSRF protection.
+      operationId: getAuthUrl
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OAuth URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      authUrl:
+                        type: string
+                        format: uri
+                        example: https://accounts.google.com/o/oauth2/auth?...
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /google-drive/auth/callback:
+    get:
+      tags:
+        - OAuth
+      summary: OAuth callback handler
+      description: |
+        Handles the OAuth 2.0 callback from Google.
+        Exchanges authorization code for tokens and stores them encrypted.
+        Redirects to frontend success or error page.
+      operationId: authCallback
+      parameters:
+        - name: code
+          in: query
+          description: Authorization code from Google
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: State parameter for CSRF protection (format schoolId:token)
+          schema:
+            type: string
+        - name: error
+          in: query
+          description: Error code if authorization failed
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to frontend
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /admin/google-drive?connected=true
+
+  /google-drive/auth/revoke:
+    post:
+      tags:
+        - OAuth
+      summary: Revoke Google Drive access
+      description: |
+        Revokes Google Drive access for the school.
+        Attempts to revoke with Google and deletes stored tokens.
+      operationId: revokeAccess
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Access revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /google-drive/auth/status:
+    get:
+      tags:
+        - OAuth
+      summary: Check connection status
+      description: Returns whether Google Drive is connected for the school.
+      operationId: getAuthStatus
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      isConnected:
+                        type: boolean
+                        example: true
+
+  # ===========================================
+  # Folder Management
+  # ===========================================
+
+  /google-drive/folders:
+    get:
+      tags:
+        - Folders
+      summary: Browse Google Drive folders
+      description: |
+        Browse folders in the connected Google Drive.
+        Results are cached for 5 minutes.
+      operationId: browseFolders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: parentId
+          in: query
+          description: Parent folder ID to browse into (omit for root)
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Search query to filter folders
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      folders:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DriveFolder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /google-drive/folders/mappings:
+    get:
+      tags:
+        - Folders
+      summary: List folder mappings
+      description: Returns all folder-to-lesson/student mappings for the school.
+      operationId: getFolderMappings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of folder mappings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      mappings:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FolderMapping'
+                      total:
+                        type: integer
+                        example: 5
+
+  /google-drive/folders/link:
+    post:
+      tags:
+        - Folders
+      summary: Link folder to lesson or student
+      description: |
+        Links a Google Drive folder to a lesson or student.
+        Triggers an immediate sync for the new folder.
+      operationId: linkFolder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkFolderInput'
+      responses:
+        '201':
+          description: Folder linked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/FolderMapping'
+                  message:
+                    type: string
+                    example: Folder linked successfully. Initial sync queued.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Conflict - folder already linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /google-drive/folders/{folderId}:
+    patch:
+      tags:
+        - Folders
+      summary: Update folder sync settings
+      description: Enable or disable sync for a folder.
+      operationId: updateFolderSettings
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FolderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                syncEnabled:
+                  type: boolean
+              required:
+                - syncEnabled
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/FolderMapping'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Folders
+      summary: Unlink folder
+      description: |
+        Unlinks a folder mapping. Files are soft-deleted in the portal
+        but remain in Google Drive.
+      operationId: unlinkFolder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FolderId'
+      responses:
+        '200':
+          description: Folder unlinked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================================
+  # File Management
+  # ===========================================
+
+  /google-drive/files:
+    get:
+      tags:
+        - Files
+      summary: List files
+      description: |
+        Lists files from synced folders with visibility filtering based on user role.
+        Results are cached for 5 minutes.
+      operationId: getFiles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: folderId
+          in: query
+          description: Filter by folder mapping ID
+          schema:
+            type: string
+            format: uuid
+        - name: lessonId
+          in: query
+          description: Filter by lesson ID
+          schema:
+            type: string
+            format: uuid
+        - name: studentId
+          in: query
+          description: Filter by student ID
+          schema:
+            type: string
+            format: uuid
+        - name: mimeType
+          in: query
+          description: Filter by MIME type
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      files:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DriveFile'
+                      total:
+                        type: integer
+
+  /google-drive/files/upload:
+    post:
+      tags:
+        - Files
+      summary: Upload file
+      description: |
+        Uploads a file via the portal. The file is pushed to Google Drive
+        and a portal record is created.
+      operationId: uploadFile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                lessonId:
+                  type: string
+                  format: uuid
+                studentId:
+                  type: string
+                  format: uuid
+                visibility:
+                  $ref: '#/components/schemas/FileVisibility'
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/DriveFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /google-drive/files/{fileId}:
+    get:
+      tags:
+        - Files
+      summary: Get file details
+      description: Returns details for a single file.
+      operationId: getFileById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      responses:
+        '200':
+          description: File details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/DriveFile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Files
+      summary: Update file metadata
+      description: Updates visibility or tags for a file.
+      operationId: updateFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                visibility:
+                  $ref: '#/components/schemas/FileVisibility'
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: File updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/DriveFile'
+
+    delete:
+      tags:
+        - Files
+      summary: Delete file
+      description: |
+        Deletes a file. For portal-uploaded files, also deletes from Google Drive.
+        Teachers can only delete their own uploads; admins can delete any file.
+      operationId: deleteFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      responses:
+        '200':
+          description: File deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================================
+  # Sync Management
+  # ===========================================
+
+  /google-drive/sync/status:
+    get:
+      tags:
+        - Sync
+      summary: Get sync status
+      description: Returns sync status for all folders.
+      operationId: getSyncStatus
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/SyncStatus'
+
+  /google-drive/sync/trigger:
+    post:
+      tags:
+        - Sync
+      summary: Trigger manual sync
+      description: |
+        Triggers a manual sync for all folders or a specific folder.
+        Returns a job ID to track progress.
+      operationId: triggerSync
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                folderId:
+                  type: string
+                  format: uuid
+                  description: Optional folder ID to sync (omit for all folders)
+      responses:
+        '200':
+          description: Sync queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Sync job queued successfully
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+
+  /google-drive/sync/job/{jobId}:
+    get:
+      tags:
+        - Sync
+      summary: Get job status
+      description: Returns the status of a sync job.
+      operationId: getJobStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/JobStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /google-drive/folders/{folderId}/reset-sync:
+    post:
+      tags:
+        - Sync
+      summary: Reset folder sync status
+      description: Resets sync status to PENDING (useful for retry after errors).
+      operationId: resetFolderSync
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FolderId'
+      responses:
+        '200':
+          description: Sync status reset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/FolderMapping'
+                  message:
+                    type: string
+                    example: Folder sync status reset. You can now trigger a new sync.
+
+  /google-drive/stats:
+    get:
+      tags:
+        - Files
+      summary: Get storage statistics
+      description: Returns storage statistics for the school.
+      operationId: getStorageStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Storage statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/StorageStats'
+
+# ===========================================
+# Components
+# ===========================================
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/login
+
+  parameters:
+    FolderId:
+      name: folderId
+      in: path
+      required: true
+      description: Folder mapping ID (UUID)
+      schema:
+        type: string
+        format: uuid
+
+    FileId:
+      name: fileId
+      in: path
+      required: true
+      description: File ID (UUID)
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    DriveFolder:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Google Drive folder ID
+        name:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+        webViewLink:
+          type: string
+          format: uri
+
+    DriveFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        driveFileId:
+          type: string
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+          nullable: true
+        webViewLink:
+          type: string
+          format: uri
+        webContentLink:
+          type: string
+          format: uri
+          nullable: true
+        thumbnailLink:
+          type: string
+          format: uri
+          nullable: true
+        visibility:
+          $ref: '#/components/schemas/FileVisibility'
+        tags:
+          type: array
+          items:
+            type: string
+        uploadedVia:
+          type: string
+          enum: [GOOGLE_DRIVE, PORTAL]
+        modifiedTime:
+          type: string
+          format: date-time
+        createdTime:
+          type: string
+          format: date-time
+
+    FolderMapping:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        driveFolderId:
+          type: string
+        folderName:
+          type: string
+        folderUrl:
+          type: string
+          format: uri
+        syncEnabled:
+          type: boolean
+        syncStatus:
+          $ref: '#/components/schemas/SyncStatusEnum'
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+        syncError:
+          type: string
+          nullable: true
+        lesson:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        student:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            firstName:
+              type: string
+            lastName:
+              type: string
+        _count:
+          type: object
+          properties:
+            files:
+              type: integer
+
+    LinkFolderInput:
+      type: object
+      properties:
+        driveFolderId:
+          type: string
+          description: Google Drive folder ID
+        folderName:
+          type: string
+        folderUrl:
+          type: string
+          format: uri
+        lessonId:
+          type: string
+          format: uuid
+          description: Required if not providing studentId
+        studentId:
+          type: string
+          format: uuid
+          description: Required if not providing lessonId
+      required:
+        - driveFolderId
+        - folderName
+        - folderUrl
+
+    FileVisibility:
+      type: string
+      enum: [ALL, TEACHERS_AND_PARENTS, TEACHERS_ONLY]
+      description: |
+        - ALL: Visible to all authenticated users
+        - TEACHERS_AND_PARENTS: Visible to teachers and parents
+        - TEACHERS_ONLY: Visible only to teachers
+
+    SyncStatusEnum:
+      type: string
+      enum: [PENDING, SYNCING, SYNCED, ERROR]
+
+    SyncStatus:
+      type: object
+      properties:
+        isConnected:
+          type: boolean
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+        folders:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              folderName:
+                type: string
+              syncStatus:
+                $ref: '#/components/schemas/SyncStatusEnum'
+              lastSyncAt:
+                type: string
+                format: date-time
+                nullable: true
+              fileCount:
+                type: integer
+              syncError:
+                type: string
+                nullable: true
+
+    JobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          enum: [waiting, active, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        result:
+          type: object
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    StorageStats:
+      type: object
+      properties:
+        totalFiles:
+          type: integer
+        totalSize:
+          type: integer
+          description: Total size in bytes
+        byVisibility:
+          type: object
+          properties:
+            ALL:
+              type: integer
+            TEACHERS_AND_PARENTS:
+              type: integer
+            TEACHERS_ONLY:
+              type: integer
+        byMimeType:
+          type: object
+          additionalProperties:
+            type: integer
+
+    SuccessMessage:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+        code:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            message: Authentication required
+            code: UNAUTHORIZED
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            message: Admin access required
+            code: FORBIDDEN
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            message: Resource not found
+            code: NOT_FOUND
+
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            message: Invalid request parameters
+            code: BAD_REQUEST
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            message: Google Drive API rate limit exceeded. Please try again in 30 seconds.
+            code: RATE_LIMITED

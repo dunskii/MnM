@@ -9,6 +9,9 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { csrfTokenGenerator, getCsrfToken } from './middleware/csrf';
 import routes from './routes';
+import { scheduleRecurringSync } from './jobs/googleDriveSync.job';
+import { closeQueues, isQueueHealthy, getQueueStats } from './config/queue';
+import { startCacheCleanup, stopCacheCleanup } from './utils/driveRateLimiter';
 
 // Load environment variables
 dotenv.config();
@@ -55,11 +58,18 @@ app.get('/api/csrf-token', getCsrfToken);
 // Health Check
 // ===========================================
 
-app.get('/health', (_req: Request, res: Response) => {
+app.get('/health', async (_req: Request, res: Response) => {
+  const queueHealthy = await isQueueHealthy().catch(() => false);
+  const queueStats = queueHealthy ? await getQueueStats().catch(() => null) : null;
+
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    services: {
+      queue: queueHealthy ? 'connected' : 'disconnected',
+      queueStats: queueStats || undefined,
+    },
   });
 });
 
@@ -90,7 +100,7 @@ app.use(errorHandler);
 // Start Server
 // ===========================================
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
@@ -104,6 +114,45 @@ app.listen(PORT, () => {
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
   `);
+
+  // Start cache cleanup interval
+  startCacheCleanup();
+  console.log('[Server] Drive cache cleanup started');
+
+  // Schedule Google Drive sync job (every 15 minutes)
+  scheduleRecurringSync()
+    .then(() => console.log('[Server] Google Drive sync job scheduled'))
+    .catch((err) => console.warn('[Server] Failed to schedule sync job:', err.message));
 });
+
+// ===========================================
+// Graceful Shutdown
+// ===========================================
+
+async function gracefulShutdown(signal: string): Promise<void> {
+  console.log(`\n[Server] ${signal} received. Shutting down gracefully...`);
+
+  // Stop accepting new connections
+  server.close(() => {
+    console.log('[Server] HTTP server closed');
+  });
+
+  // Stop cache cleanup
+  stopCacheCleanup();
+  console.log('[Server] Cache cleanup stopped');
+
+  // Close queue connections
+  try {
+    await closeQueues();
+  } catch (err) {
+    console.error('[Server] Error closing queues:', err);
+  }
+
+  console.log('[Server] Shutdown complete');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;

@@ -20,6 +20,7 @@ import attendanceRoutes from './attendance.routes';
 import notesRoutes from './notes.routes';
 import resourcesRoutes from './resources.routes';
 import invoicesRoutes from './invoices.routes';
+import googleDriveRoutes from './googleDrive.routes';
 
 const router = Router();
 
@@ -57,5 +58,6 @@ router.use('/attendance', csrfProtection, attendanceRoutes);
 router.use('/notes', csrfProtection, notesRoutes);
 router.use('/resources', csrfProtection, resourcesRoutes);
 router.use('/invoices', csrfProtection, invoicesRoutes);
+router.use('/google-drive', csrfProtection, googleDriveRoutes);
 
 export default router;

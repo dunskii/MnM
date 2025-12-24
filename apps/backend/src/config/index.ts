@@ -91,9 +91,6 @@ export const config = {
   // Password
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
 
-  // Redis
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-
   // Email (SendGrid)
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY || '',
@@ -108,11 +105,25 @@ export const config = {
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
   },
 
-  // Google Drive
-  google: {
+  // Google Drive OAuth 2.0
+  googleDrive: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    serviceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '',
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/v1/google-drive/auth/callback',
+    scopes: [
+      'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/drive.file',
+    ],
+    syncIntervalMinutes: parseInt(process.env.DRIVE_SYNC_INTERVAL_MINUTES || '15', 10),
+    maxFileSizeMB: parseInt(process.env.DRIVE_MAX_FILE_SIZE_MB || '25', 10),
+  },
+
+  // Redis (for Bull queues)
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || undefined,
   },
 
   // DigitalOcean Spaces

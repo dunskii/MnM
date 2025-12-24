@@ -105,6 +105,18 @@ enum DeletionStatus {
   HARD_DELETED
 }
 
+enum SyncStatus {
+  PENDING       // Never synced
+  SYNCING       // Sync in progress
+  SYNCED        // Last sync successful
+  ERROR         // Last sync failed
+}
+
+enum UploadSource {
+  GOOGLE_DRIVE  // Synced from Drive
+  PORTAL        // Uploaded via portal
+}
+
 // ===========================================
 // CORE MODELS
 // ===========================================
@@ -148,6 +160,11 @@ model School {
   invoices             Invoice[]
   registrationPayments RegistrationPayment[]
   retentionPolicy      SchoolRetentionPolicy?
+
+  // Google Drive relations
+  googleDriveAuth      GoogleDriveAuth?
+  googleDriveFolders   GoogleDriveFolder[]
+  googleDriveFiles     GoogleDriveFile[]
 
   @@index([slug])
   @@index([stripeAccountId])
@@ -311,14 +328,15 @@ model Student {
   updatedAt      DateTime       @updatedAt
 
   // Relations
-  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  family         Family?            @relation(fields: [familyId], references: [id])
-  enrollments    LessonEnrollment[]
-  attendances    Attendance[]
-  studentNotes   Note[]             @relation("StudentNotes")
-  resources      Resource[]         @relation("StudentResources")
-  hybridBookings HybridBooking[]
+  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  family            Family?            @relation(fields: [familyId], references: [id])
+  enrollments       LessonEnrollment[]
+  attendances       Attendance[]
+  studentNotes      Note[]             @relation("StudentNotes")
+  resources         Resource[]         @relation("StudentResources")
+  hybridBookings    HybridBooking[]
+  googleDriveFolder GoogleDriveFolder?
 
   @@index([schoolId])
   @@index([familyId])
@@ -504,18 +522,19 @@ model Lesson {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  school         School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  lessonType     LessonType           @relation(fields: [lessonTypeId], references: [id])
-  term           Term                 @relation(fields: [termId], references: [id])
-  teacher        Teacher              @relation(fields: [teacherId], references: [id])
-  room           Room                 @relation(fields: [roomId], references: [id])
-  instrument     Instrument?          @relation(fields: [instrumentId], references: [id])
-  enrollments    LessonEnrollment[]
-  attendances    Attendance[]
-  notes          Note[]               @relation("LessonNotes")
-  resources      Resource[]           @relation("LessonResources")
-  hybridPattern  HybridLessonPattern?
-  hybridBookings HybridBooking[]
+  school            School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  lessonType        LessonType           @relation(fields: [lessonTypeId], references: [id])
+  term              Term                 @relation(fields: [termId], references: [id])
+  teacher           Teacher              @relation(fields: [teacherId], references: [id])
+  room              Room                 @relation(fields: [roomId], references: [id])
+  instrument        Instrument?          @relation(fields: [instrumentId], references: [id])
+  enrollments       LessonEnrollment[]
+  attendances       Attendance[]
+  notes             Note[]               @relation("LessonNotes")
+  resources         Resource[]           @relation("LessonResources")
+  hybridPattern     HybridLessonPattern?
+  hybridBookings    HybridBooking[]
+  googleDriveFolder GoogleDriveFolder?
 
   @@index([schoolId])
   @@index([termId])
@@ -918,4 +937,108 @@ model FinancialAuditLog {
   @@index([entityType, entityId])
   @@index([performedBy])
   @@index([createdAt])
+}
+
+// ===========================================
+// GOOGLE DRIVE SYNC MODELS
+// ===========================================
+
+model GoogleDriveAuth {
+  id            String   @id @default(uuid())
+  schoolId      String   @unique
+  school        School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  accessToken   String   // Encrypted
+  refreshToken  String   // Encrypted
+  expiresAt     DateTime
+
+  scope         String   // Comma-separated scopes
+  tokenType     String   @default("Bearer")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model GoogleDriveFolder {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Google Drive folder details
+  driveFolderId   String  // Google Drive folder ID
+  folderName      String  // Human-readable name
+  folderUrl       String  // Direct link to folder
+
+  // Mapping to portal entities (one of these must be set)
+  lessonId        String? @unique
+  lesson          Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  studentId       String? @unique
+  student         Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Sync settings
+  syncEnabled     Boolean @default(true)
+  lastSyncAt      DateTime?
+  syncStatus      SyncStatus @default(PENDING)
+  syncError       String?
+
+  // Files in this folder
+  files           GoogleDriveFile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([driveFolderId])
+  @@index([lessonId])
+  @@index([studentId])
+  @@unique([schoolId, driveFolderId])
+}
+
+model GoogleDriveFile {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Google Drive file details
+  driveFileId     String  @unique  // Google Drive file ID
+  fileName        String
+  mimeType        String
+  fileSize        Int?    // Bytes
+  webViewLink     String  // Link to view in Drive
+  webContentLink  String? // Direct download link
+  thumbnailLink   String?
+  modifiedTime    DateTime
+  createdTime     DateTime
+
+  // Portal mapping
+  driveFolderId   String
+  driveFolder     GoogleDriveFolder @relation(fields: [driveFolderId], references: [id], onDelete: Cascade)
+
+  // Portal storage (for offline access / CDN)
+  portalFileId    String?  // ID in DigitalOcean Spaces (optional)
+  portalFileUrl   String?  // CDN URL for fast downloads
+
+  // File metadata
+  visibility      FileVisibility @default(ALL)
+  tags            Json           @default("[]")
+
+  // Upload source
+  uploadedBy      String?  // User ID if uploaded via portal
+  uploadedVia     UploadSource @default(GOOGLE_DRIVE)
+
+  // Deletion tracking
+  deletedInDrive  Boolean @default(false)
+  deletedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([driveFileId])
+  @@index([driveFolderId])
+  @@index([uploadedBy])
+  @@index([deletedInDrive])
 }

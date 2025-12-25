@@ -38,6 +38,7 @@ import {
   PersonRemove as UnenrollIcon,
   Search as SearchIcon,
   School as StudentIcon,
+  Folder as FolderIcon,
 } from '@mui/icons-material';
 import PageHeader from '../../components/common/PageHeader';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -57,6 +58,9 @@ import {
   getLessonTypeColor,
 } from '../../api/lessons.api';
 import { Student } from '../../api/users.api';
+import FileList from '../../components/googleDrive/FileList';
+import DriveFileUploader from '../../components/googleDrive/DriveFileUploader';
+import { useGoogleDriveAuthStatus } from '../../hooks/useGoogleDrive';
 
 // ===========================================
 // COMPONENT
@@ -71,6 +75,12 @@ export default function LessonDetailPage() {
   const { data: enrollmentsData, isLoading: enrollmentsLoading } = useLessonEnrollments(id || '');
   const { data: capacityData } = useLessonCapacity(id || '');
   const { data: studentsData } = useStudents();
+  const { data: driveAuthStatus } = useGoogleDriveAuthStatus();
+
+  // State for file uploader
+  const [uploaderOpen, setUploaderOpen] = useState(false);
+
+  const isDriveConnected = driveAuthStatus?.isConnected ?? false;
 
   const lesson = lessonData;
   const enrollments = enrollmentsData ?? [];
@@ -457,7 +467,56 @@ export default function LessonDetailPage() {
             )}
           </Paper>
         </Grid>
+
+        {/* Lesson Resources Card */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                <FolderIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Lesson Resources
+              </Typography>
+              {isDriveConnected && (
+                <Button
+                  variant="contained"
+                  onClick={() => setUploaderOpen(true)}
+                >
+                  Upload Resource
+                </Button>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {!isDriveConnected ? (
+              <Alert severity="info">
+                Google Drive is not connected. Connect Google Drive in{' '}
+                <Button
+                  size="small"
+                  onClick={() => navigate('/admin/google-drive')}
+                  sx={{ ml: 1 }}
+                >
+                  Settings
+                </Button>
+              </Alert>
+            ) : (
+              <FileList
+                lessonId={id}
+                editable
+                showFilters={false}
+              />
+            )}
+          </Paper>
+        </Grid>
       </Grid>
+
+      {/* File Uploader Modal */}
+      {isDriveConnected && (
+        <DriveFileUploader
+          open={uploaderOpen}
+          onClose={() => setUploaderOpen(false)}
+          lessonId={id}
+        />
+      )}
 
       {/* Enroll Students Modal */}
       <Dialog

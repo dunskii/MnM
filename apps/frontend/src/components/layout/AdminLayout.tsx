@@ -41,6 +41,8 @@ import {
   Settings,
   Handshake,
   LibraryMusic,
+  Cloud,
+  Receipt,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -67,6 +69,9 @@ const navigationItems = [
   { divider: true },
   { label: 'Lessons', path: '/admin/lessons', icon: LibraryMusic },
   { label: 'Calendar', path: '/admin/calendar', icon: CalendarMonth },
+  { divider: true },
+  { label: 'Invoices', path: '/admin/invoices', icon: Receipt },
+  { label: 'Google Drive', path: '/admin/google-drive', icon: Cloud },
 ];
 
 interface NavigationItem {

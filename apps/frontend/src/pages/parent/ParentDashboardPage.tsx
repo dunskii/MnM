@@ -709,6 +709,13 @@ export default function ParentDashboardPage() {
                 >
                   View Invoices
                 </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<FolderIcon />}
+                  onClick={() => navigate('/parent/resources')}
+                >
+                  View Resources
+                </Button>
               </Stack>
             </CardContent>
           </Card>
@@ -742,7 +749,7 @@ export default function ParentDashboardPage() {
               <RecentResources
                 resources={resourcesData || []}
                 isLoading={resourcesLoading}
-                onViewAll={() => {}}
+                onViewAll={() => navigate('/parent/resources')}
               />
             </CardContent>
           </Card>

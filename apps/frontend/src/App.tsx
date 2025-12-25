@@ -23,6 +23,8 @@ import LessonDetailPage from './pages/admin/LessonDetailPage';
 import CalendarPage from './pages/admin/CalendarPage';
 import InvoicesPage from './pages/admin/InvoicesPage';
 import InvoiceDetailPage from './pages/admin/InvoiceDetailPage';
+import GoogleDrivePage from './pages/admin/GoogleDrivePage';
+import GoogleDriveFilesPage from './pages/admin/GoogleDriveFilesPage';
 
 // Teacher Pages
 import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
@@ -31,6 +33,7 @@ import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage';
 import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 import HybridBookingPage from './pages/parent/HybridBookingPage';
 import ParentInvoicesPage from './pages/parent/InvoicesPage';
+import ResourcesPage from './pages/parent/ResourcesPage';
 
 // Public Pages
 import MeetAndGreetBookingPage from './pages/public/MeetAndGreetBookingPage';
@@ -126,6 +129,8 @@ function App() {
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/:id" element={<InvoiceDetailPage />} />
+        <Route path="google-drive" element={<GoogleDrivePage />} />
+        <Route path="google-drive/files" element={<GoogleDriveFilesPage />} />
       </Route>
 
       {/* Teacher Routes */}
@@ -152,6 +157,7 @@ function App() {
         <Route index element={<ErrorBoundary><ParentDashboardPage /></ErrorBoundary>} />
         <Route path="hybrid-booking" element={<ErrorBoundary><HybridBookingPage /></ErrorBoundary>} />
         <Route path="invoices" element={<ErrorBoundary><ParentInvoicesPage /></ErrorBoundary>} />
+        <Route path="resources" element={<ErrorBoundary><ResourcesPage /></ErrorBoundary>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

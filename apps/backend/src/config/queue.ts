@@ -1,7 +1,7 @@
 // ===========================================
 // Queue Configuration (Bull + Redis)
 // ===========================================
-// Background job processing for Google Drive sync
+// Background job processing for Google Drive sync and email notifications
 // Uses Bull queue backed by Redis
 
 import Bull from 'bull';
@@ -10,6 +10,27 @@ import { config } from './index';
 // ===========================================
 // QUEUE INSTANCES
 // ===========================================
+
+/**
+ * Email notification queue
+ * Handles transactional emails with retry logic
+ */
+export const emailNotificationQueue = new Bull('email-notifications', {
+  redis: {
+    host: config.redis.host,
+    port: config.redis.port,
+    password: config.redis.password || undefined,
+  },
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 3000, // 3 seconds initial delay
+    },
+    removeOnComplete: 50, // Keep last 50 completed jobs
+    removeOnFail: 25, // Keep last 25 failed jobs
+  },
+});
 
 /**
  * Google Drive sync queue
@@ -36,6 +57,24 @@ export const googleDriveSyncQueue = new Bull('google-drive-sync', {
 // QUEUE EVENT HANDLERS
 // ===========================================
 
+// Email notification queue events
+emailNotificationQueue.on('error', (error) => {
+  console.error('[Queue] Email notification queue error:', error);
+});
+
+emailNotificationQueue.on('failed', (job, error) => {
+  console.error(`[Queue] Email job ${job.id} failed after ${job.attemptsMade} attempts:`, error.message);
+});
+
+emailNotificationQueue.on('completed', (job) => {
+  console.log(`[Queue] Email job ${job.id} completed: ${job.data.type}`);
+});
+
+emailNotificationQueue.on('stalled', (job) => {
+  console.warn(`[Queue] Email job ${job.id} has stalled`);
+});
+
+// Google Drive sync queue events
 googleDriveSyncQueue.on('error', (error) => {
   console.error('[Queue] Google Drive sync queue error:', error);
 });
@@ -76,22 +115,39 @@ export async function isQueueHealthy(): Promise<boolean> {
   }
 }
 
-/**
- * Get queue stats for monitoring
- */
-export async function getQueueStats(): Promise<{
+interface QueueStatsResult {
   waiting: number;
   active: number;
   completed: number;
   failed: number;
   delayed: number;
-}> {
+}
+
+/**
+ * Get Google Drive sync queue stats for monitoring
+ */
+export async function getQueueStats(): Promise<QueueStatsResult> {
   const [waiting, active, completed, failed, delayed] = await Promise.all([
     googleDriveSyncQueue.getWaitingCount(),
     googleDriveSyncQueue.getActiveCount(),
     googleDriveSyncQueue.getCompletedCount(),
     googleDriveSyncQueue.getFailedCount(),
     googleDriveSyncQueue.getDelayedCount(),
+  ]);
+
+  return { waiting, active, completed, failed, delayed };
+}
+
+/**
+ * Get email notification queue stats for monitoring
+ */
+export async function getEmailQueueStats(): Promise<QueueStatsResult> {
+  const [waiting, active, completed, failed, delayed] = await Promise.all([
+    emailNotificationQueue.getWaitingCount(),
+    emailNotificationQueue.getActiveCount(),
+    emailNotificationQueue.getCompletedCount(),
+    emailNotificationQueue.getFailedCount(),
+    emailNotificationQueue.getDelayedCount(),
   ]);
 
   return { waiting, active, completed, failed, delayed };
@@ -106,6 +162,9 @@ export async function getQueueStats(): Promise<{
  */
 export async function closeQueues(): Promise<void> {
   console.log('[Queue] Closing queues...');
-  await googleDriveSyncQueue.close();
+  await Promise.all([
+    emailNotificationQueue.close(),
+    googleDriveSyncQueue.close(),
+  ]);
   console.log('[Queue] Queues closed.');
 }

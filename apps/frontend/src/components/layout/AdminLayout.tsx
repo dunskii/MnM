@@ -43,13 +43,23 @@ import {
   LibraryMusic,
   Cloud,
   Receipt,
+  Notifications,
+  EventAvailable,
+  Folder,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
 const DRAWER_WIDTH = 260;
 
+interface NavigationItem {
+  label?: string;
+  path?: string;
+  icon?: typeof Dashboard;
+  divider?: boolean;
+}
+
 // Navigation items for admin sidebar
-const navigationItems = [
+const adminNavigationItems: NavigationItem[] = [
   { label: 'Dashboard', path: '/admin', icon: Dashboard },
   { divider: true },
   { label: 'Meet & Greet', path: '/admin/meet-and-greet', icon: Handshake },
@@ -74,12 +84,24 @@ const navigationItems = [
   { label: 'Google Drive', path: '/admin/google-drive', icon: Cloud },
 ];
 
-interface NavigationItem {
-  label?: string;
-  path?: string;
-  icon?: typeof Dashboard;
-  divider?: boolean;
-}
+// Navigation items for parent sidebar
+const parentNavigationItems: NavigationItem[] = [
+  { label: 'Dashboard', path: '/parent', icon: Dashboard },
+  { divider: true },
+  { label: 'Hybrid Booking', path: '/parent/hybrid-booking', icon: EventAvailable },
+  { label: 'Invoices', path: '/parent/invoices', icon: Receipt },
+  { label: 'Resources', path: '/parent/resources', icon: Folder },
+  { divider: true },
+  { label: 'Notifications', path: '/parent/notifications', icon: Notifications },
+];
+
+// Navigation items for teacher sidebar
+const teacherNavigationItems: NavigationItem[] = [
+  { label: 'Dashboard', path: '/teacher', icon: Dashboard },
+  { divider: true },
+  { label: 'My Lessons', path: '/teacher/lessons', icon: LibraryMusic },
+  { label: 'Calendar', path: '/teacher/calendar', icon: CalendarMonth },
+];
 
 export default function AdminLayout() {
   const theme = useTheme();
@@ -116,9 +138,39 @@ export default function AdminLayout() {
     }
   };
 
+  // Get navigation items based on user role
+  const getNavigationItems = (): NavigationItem[] => {
+    switch (user?.role) {
+      case 'PARENT':
+        return parentNavigationItems;
+      case 'TEACHER':
+        return teacherNavigationItems;
+      case 'ADMIN':
+      default:
+        return adminNavigationItems;
+    }
+  };
+
+  const navigationItems = getNavigationItems();
+
+  // Get the base path for the current role
+  const getBasePath = (): string => {
+    switch (user?.role) {
+      case 'PARENT':
+        return '/parent';
+      case 'TEACHER':
+        return '/teacher';
+      case 'ADMIN':
+      default:
+        return '/admin';
+    }
+  };
+
+  const basePath = getBasePath();
+
   const isActivePath = (path: string) => {
-    if (path === '/admin') {
-      return location.pathname === '/admin';
+    if (path === basePath) {
+      return location.pathname === basePath;
     }
     return location.pathname.startsWith(path);
   };

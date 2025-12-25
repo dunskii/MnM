@@ -313,6 +313,15 @@ export async function createInvoice(
     include: invoiceInclude,
   });
 
+  // Queue invoice created email notification
+  try {
+    const { queueInvoiceCreatedEmail } = await import('../jobs/emailNotification.job');
+    await queueInvoiceCreatedEmail(schoolId, invoice.id);
+  } catch (error) {
+    console.error('[InvoiceService] Failed to queue invoice email:', error);
+    // Don't fail the invoice creation if email fails
+  }
+
   return invoice as unknown as InvoiceWithDetails;
 }
 
@@ -619,27 +628,13 @@ export async function recordManualPayment(
     return newPayment;
   });
 
-  // Send payment receipt email
-  const typedExisting = existing as unknown as InvoiceWithDetails & {
-    school: { name: string };
-  };
-
-  for (const parent of typedExisting.family.parents) {
-    if (parent.contact1Email) {
-      try {
-        await emailService.sendPaymentReceiptEmail(parent.contact1Email, {
-          parentName: parent.contact1Name,
-          schoolName: typedExisting.school.name,
-          invoiceNumber: existing.invoiceNumber,
-          amount: input.amount,
-          paymentMethod: input.method,
-          reference: input.reference,
-          remainingBalance: Math.max(0, Number(existing.total) - currentPaid - input.amount),
-        });
-      } catch (error) {
-        console.error(`Failed to send payment receipt to ${parent.contact1Email}:`, error);
-      }
-    }
+  // Queue payment received email notification
+  try {
+    const { queuePaymentReceivedEmail } = await import('../jobs/emailNotification.job');
+    await queuePaymentReceivedEmail(schoolId, payment.id);
+  } catch (error) {
+    console.error('[InvoiceService] Failed to queue payment receipt email:', error);
+    // Don't fail the payment if email fails
   }
 
   // Fetch and return the updated invoice with all payments

@@ -10,8 +10,11 @@ import { notFound } from './middleware/notFound';
 import { csrfTokenGenerator, getCsrfToken } from './middleware/csrf';
 import routes from './routes';
 import { scheduleRecurringSync } from './jobs/googleDriveSync.job';
-import { closeQueues, isQueueHealthy, getQueueStats } from './config/queue';
+import { closeQueues, isQueueHealthy, getQueueStats, getEmailQueueStats } from './config/queue';
 import { startCacheCleanup, stopCacheCleanup } from './utils/driveRateLimiter';
+
+// Import job processors to register them with Bull queues
+import './jobs/emailNotification.job';
 
 // Load environment variables
 dotenv.config();
@@ -60,7 +63,8 @@ app.get('/api/csrf-token', getCsrfToken);
 
 app.get('/health', async (_req: Request, res: Response) => {
   const queueHealthy = await isQueueHealthy().catch(() => false);
-  const queueStats = queueHealthy ? await getQueueStats().catch(() => null) : null;
+  const driveQueueStats = queueHealthy ? await getQueueStats().catch(() => null) : null;
+  const emailQueueStats = queueHealthy ? await getEmailQueueStats().catch(() => null) : null;
 
   res.status(200).json({
     status: 'healthy',
@@ -68,7 +72,8 @@ app.get('/health', async (_req: Request, res: Response) => {
     environment: process.env.NODE_ENV || 'development',
     services: {
       queue: queueHealthy ? 'connected' : 'disconnected',
-      queueStats: queueStats || undefined,
+      driveSync: driveQueueStats || undefined,
+      emailNotifications: emailQueueStats || undefined,
     },
   });
 });

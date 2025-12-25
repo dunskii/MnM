@@ -22,6 +22,12 @@ import {
   BulkEnrollStudentsInput,
   LessonFiltersInput,
 } from '../validators/lesson.validators';
+import {
+  validateReschedule,
+  validateCheckConflicts,
+  RescheduleInput,
+  CheckConflictsInput,
+} from '../validators/notification.validators';
 
 const router = Router();
 
@@ -326,6 +332,59 @@ router.get(
         req.params.id
       );
       res.json({ status: 'success', data: capacity });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ===========================================
+// RESCHEDULE ENDPOINTS (Drag-and-Drop)
+// ===========================================
+
+/**
+ * GET /lessons/:id/check-conflicts
+ * Pre-validate a reschedule operation (for drag-and-drop preview)
+ * Query: newDayOfWeek, newStartTime, newEndTime
+ * Access: Admin only
+ */
+router.get(
+  '/:id/check-conflicts',
+  adminOnly,
+  validateCheckConflicts,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const conflicts = await lessonService.checkRescheduleConflicts(
+        req.user!.schoolId,
+        req.params.id,
+        req.query as unknown as CheckConflictsInput
+      );
+      res.json({ status: 'success', data: conflicts });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /lessons/:id/reschedule
+ * Reschedule a lesson (for drag-and-drop)
+ * Body: { newDayOfWeek, newStartTime, newEndTime, notifyParents?, reason? }
+ * Access: Admin only
+ */
+router.post(
+  '/:id/reschedule',
+  adminOnly,
+  validateReschedule,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const lesson = await lessonService.rescheduleLesson(
+        req.user!.schoolId,
+        req.params.id,
+        req.body as RescheduleInput,
+        req.user!.userId
+      );
+      res.json({ status: 'success', data: lesson });
     } catch (error) {
       next(error);
     }

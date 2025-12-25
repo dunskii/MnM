@@ -34,6 +34,7 @@ import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 import HybridBookingPage from './pages/parent/HybridBookingPage';
 import ParentInvoicesPage from './pages/parent/InvoicesPage';
 import ResourcesPage from './pages/parent/ResourcesPage';
+import NotificationPreferencesPage from './pages/parent/NotificationPreferencesPage';
 
 // Public Pages
 import MeetAndGreetBookingPage from './pages/public/MeetAndGreetBookingPage';
@@ -158,6 +159,7 @@ function App() {
         <Route path="hybrid-booking" element={<ErrorBoundary><HybridBookingPage /></ErrorBoundary>} />
         <Route path="invoices" element={<ErrorBoundary><ParentInvoicesPage /></ErrorBoundary>} />
         <Route path="resources" element={<ErrorBoundary><ResourcesPage /></ErrorBoundary>} />
+        <Route path="notifications" element={<ErrorBoundary><NotificationPreferencesPage /></ErrorBoundary>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

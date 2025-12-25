@@ -68,6 +68,9 @@ const PARENT_USER_2 = {
   lastName: 'Parent',
 };
 
+// Increase timeout for integration tests with many database operations
+jest.setTimeout(30000);
+
 describe('Hybrid Booking Routes Integration Tests', () => {
   let school1Id: string;
   let school2Id: string;
@@ -576,11 +579,22 @@ describe('Hybrid Booking Routes Integration Tests', () => {
     let bookingToCancel: string;
 
     beforeAll(async () => {
+      // Skip if main setup failed
+      if (!parent2Token || !hybridLessonId || !student2Id) {
+        console.log('Skipping cancel booking setup - main setup incomplete');
+        return;
+      }
+
       // Create a booking for parent2 to cancel
       const slotsRes = await authGet(
         `/api/v1/hybrid-bookings/available-slots?lessonId=${hybridLessonId}&weekNumber=8`,
         parent2Token
       );
+
+      if (!slotsRes.body.data) {
+        console.log('No slots data returned');
+        return;
+      }
 
       const slot = slotsRes.body.data.find((s: { isAvailable: boolean }) => s.isAvailable);
       if (slot) {

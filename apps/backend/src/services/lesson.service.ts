@@ -974,3 +974,183 @@ export async function unenrollStudent(
     data: { isActive: false },
   });
 }
+
+// ===========================================
+// RESCHEDULE OPERATIONS (Drag-and-Drop)
+// ===========================================
+
+export interface RescheduleInput {
+  newDayOfWeek: number;
+  newStartTime: string;
+  newEndTime: string;
+  notifyParents?: boolean;
+  reason?: string;
+}
+
+export interface ConflictCheckResult {
+  hasConflicts: boolean;
+  teacherConflict: {
+    lessonId: string;
+    lessonName: string;
+    time: string;
+  } | null;
+  roomConflict: {
+    lessonId: string;
+    lessonName: string;
+    time: string;
+  } | null;
+  affectedStudents: number;
+  affectedEnrollments: {
+    studentId: string;
+    studentName: string;
+    hasOtherLessons: boolean;
+  }[];
+}
+
+/**
+ * Check for conflicts before rescheduling a lesson
+ * Used for drag-and-drop preview
+ * SECURITY: schoolId filter is REQUIRED for multi-tenancy
+ */
+export async function checkRescheduleConflicts(
+  schoolId: string,
+  lessonId: string,
+  input: { newDayOfWeek: number; newStartTime: string; newEndTime: string }
+): Promise<ConflictCheckResult> {
+  const lesson = await getLesson(schoolId, lessonId);
+
+  if (!lesson) {
+    throw new AppError('Lesson not found.', 404);
+  }
+
+  // Check teacher availability
+  const teacherCheck = await validateTeacherAvailability(
+    schoolId,
+    lesson.teacher.id,
+    input.newDayOfWeek,
+    input.newStartTime,
+    input.newEndTime,
+    lessonId
+  );
+
+  // Check room availability
+  const roomCheck = await validateRoomAvailability(
+    schoolId,
+    lesson.room.id,
+    input.newDayOfWeek,
+    input.newStartTime,
+    input.newEndTime,
+    lessonId
+  );
+
+  // Count affected students (enrolled students)
+  const affectedEnrollments = lesson.enrollments
+    .filter((e) => e.isActive)
+    .map((e) => ({
+      studentId: e.student.id,
+      studentName: `${e.student.firstName} ${e.student.lastName}`,
+      hasOtherLessons: false, // Can be enhanced later to check other enrollments
+    }));
+
+  return {
+    hasConflicts: !teacherCheck.available || !roomCheck.available,
+    teacherConflict: teacherCheck.conflictingLesson
+      ? {
+          lessonId: teacherCheck.conflictingLesson.id,
+          lessonName: teacherCheck.conflictingLesson.name,
+          time: `${teacherCheck.conflictingLesson.startTime} - ${teacherCheck.conflictingLesson.endTime}`,
+        }
+      : null,
+    roomConflict: roomCheck.conflictingLesson
+      ? {
+          lessonId: roomCheck.conflictingLesson.id,
+          lessonName: roomCheck.conflictingLesson.name,
+          time: `${roomCheck.conflictingLesson.startTime} - ${roomCheck.conflictingLesson.endTime}`,
+        }
+      : null,
+    affectedStudents: affectedEnrollments.length,
+    affectedEnrollments,
+  };
+}
+
+/**
+ * Reschedule a lesson (for drag-and-drop)
+ * Validates conflicts and optionally queues notification emails
+ * SECURITY: schoolId filter is REQUIRED for multi-tenancy
+ */
+export async function rescheduleLesson(
+  schoolId: string,
+  lessonId: string,
+  input: RescheduleInput,
+  _performedByUserId: string
+): Promise<LessonWithRelations> {
+  // Get existing lesson to store old values
+  const existing = await getLesson(schoolId, lessonId);
+
+  if (!existing) {
+    throw new AppError('Lesson not found.', 404);
+  }
+
+  // Store old values for notification
+  const oldDayOfWeek = existing.dayOfWeek;
+  const oldStartTime = existing.startTime;
+  const oldEndTime = existing.endTime;
+
+  // Check for conflicts
+  const conflicts = await checkRescheduleConflicts(schoolId, lessonId, {
+    newDayOfWeek: input.newDayOfWeek,
+    newStartTime: input.newStartTime,
+    newEndTime: input.newEndTime,
+  });
+
+  if (conflicts.hasConflicts) {
+    if (conflicts.teacherConflict) {
+      throw new AppError(
+        `Teacher is not available at this time. Conflicts with: ${conflicts.teacherConflict.lessonName}`,
+        409
+      );
+    }
+    if (conflicts.roomConflict) {
+      throw new AppError(
+        `Room is not available at this time. Conflicts with: ${conflicts.roomConflict.lessonName}`,
+        409
+      );
+    }
+  }
+
+  // Calculate new duration
+  const durationMins = calculateDurationMins(input.newStartTime, input.newEndTime);
+
+  // Update the lesson
+  const updatedLesson = await updateLesson(schoolId, lessonId, {
+    dayOfWeek: input.newDayOfWeek,
+    startTime: input.newStartTime,
+    endTime: input.newEndTime,
+    durationMins,
+  });
+
+  // Queue notification emails if requested
+  if (input.notifyParents !== false) {
+    // Import dynamically to avoid circular dependencies
+    const { queueLessonRescheduledEmail } = await import('../jobs/emailNotification.job');
+    await queueLessonRescheduledEmail(
+      schoolId,
+      lessonId,
+      oldDayOfWeek,
+      oldStartTime,
+      oldEndTime,
+      input.reason
+    );
+  }
+
+  return updatedLesson;
+}
+
+/**
+ * Calculate duration in minutes from start and end times
+ */
+function calculateDurationMins(startTime: string, endTime: string): number {
+  const [startH, startM] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+  return (endH * 60 + endM) - (startH * 60 + startM);
+}

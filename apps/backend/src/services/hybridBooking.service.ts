@@ -460,6 +460,15 @@ export async function createHybridBooking(
     });
   });
 
+  // Queue booking confirmation email notification
+  try {
+    const { queueIndividualSessionBookedEmail } = await import('../jobs/emailNotification.job');
+    await queueIndividualSessionBookedEmail(schoolId, booking.id);
+  } catch (error) {
+    console.error('[HybridBookingService] Failed to queue booking email:', error);
+    // Don't fail the booking if email fails
+  }
+
   return booking as unknown as HybridBookingWithRelations;
 }
 
@@ -550,6 +559,22 @@ export async function rescheduleHybridBooking(
       include: bookingInclude,
     });
   });
+
+  // Queue reschedule notification email
+  try {
+    const { queueIndividualSessionRescheduledEmail } = await import('../jobs/emailNotification.job');
+    const oldDate = new Intl.DateTimeFormat('en-AU', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(existingBooking.scheduledDate);
+    const oldTime = `${existingBooking.startTime} - ${existingBooking.endTime}`;
+    await queueIndividualSessionRescheduledEmail(schoolId, updatedBooking.id, oldDate, oldTime);
+  } catch (error) {
+    console.error('[HybridBookingService] Failed to queue reschedule email:', error);
+    // Don't fail the reschedule if email fails
+  }
 
   return updatedBooking as unknown as HybridBookingWithRelations;
 }
@@ -791,10 +816,23 @@ export async function toggleBookingsOpen(
   }
 
   // Update bookingsOpen flag
-  return prisma.hybridLessonPattern.update({
+  const pattern = await prisma.hybridLessonPattern.update({
     where: { lessonId },
     data: { bookingsOpen: open },
   });
+
+  // If opening bookings, queue notification emails to all enrolled parents
+  if (open) {
+    try {
+      const { queueHybridBookingOpenedEmails } = await import('../jobs/emailNotification.job');
+      await queueHybridBookingOpenedEmails(schoolId, lessonId);
+    } catch (error) {
+      console.error('[HybridBookingService] Failed to queue booking opened emails:', error);
+      // Don't fail the toggle if email fails
+    }
+  }
+
+  return pattern;
 }
 
 // ===========================================

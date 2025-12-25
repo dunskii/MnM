@@ -10,6 +10,8 @@ import {
   LessonFilters,
   CreateLessonInput,
   UpdateLessonInput,
+  ConflictCheckInput,
+  RescheduleInput,
 } from '../api/lessons.api';
 
 // ===========================================
@@ -325,5 +327,55 @@ export function useCheckTeacherAvailability() {
         endTime,
         excludeLessonId
       ),
+  });
+}
+
+// ===========================================
+// RESCHEDULE HOOKS
+// ===========================================
+
+/**
+ * Check for conflicts before rescheduling a lesson
+ */
+export function useCheckRescheduleConflicts() {
+  return useMutation({
+    mutationFn: ({
+      lessonId,
+      input,
+    }: {
+      lessonId: string;
+      input: ConflictCheckInput;
+    }) => lessonsApi.checkRescheduleConflicts(lessonId, input),
+  });
+}
+
+/**
+ * Reschedule a lesson to a new time slot
+ */
+export function useRescheduleLesson() {
+  const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
+
+  return useMutation({
+    mutationFn: ({
+      lessonId,
+      input,
+    }: {
+      lessonId: string;
+      input: RescheduleInput;
+    }) => lessonsApi.reschedule(lessonId, input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: lessonKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: lessonKeys.detail(variables.lessonId),
+      });
+      // Also invalidate calendar events
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      enqueueSnackbar('Lesson rescheduled successfully', { variant: 'success' });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      const message = error.response?.data?.message || 'Failed to reschedule lesson';
+      enqueueSnackbar(message, { variant: 'error' });
+    },
   });
 }

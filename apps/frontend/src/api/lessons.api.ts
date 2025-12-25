@@ -135,6 +135,44 @@ export interface CapacityResult {
   available: number;
 }
 
+// ===========================================
+// RESCHEDULE TYPES
+// ===========================================
+
+export interface ConflictCheckInput {
+  newDayOfWeek: number;
+  newStartTime: string;
+  newEndTime: string;
+}
+
+export interface ConflictCheckResult {
+  hasConflicts: boolean;
+  teacherConflict: {
+    lessonId: string;
+    lessonName: string;
+    time: string;
+  } | null;
+  roomConflict: {
+    lessonId: string;
+    lessonName: string;
+    time: string;
+  } | null;
+  affectedStudents: number;
+  affectedEnrollments: {
+    studentId: string;
+    studentName: string;
+    hasOtherLessons: boolean;
+  }[];
+}
+
+export interface RescheduleInput {
+  newDayOfWeek: number;
+  newStartTime: string;
+  newEndTime: string;
+  notifyParents?: boolean;
+  reason?: string;
+}
+
 // API Response wrapper type (internal use)
 // ===========================================
 // LESSONS API
@@ -243,6 +281,28 @@ export const lessonsApi = {
   checkCapacity: (lessonId: string): Promise<CapacityResult> =>
     apiClient
       .get<{ status: string; data: CapacityResult }>(`/lessons/${lessonId}/capacity`)
+      .then((res) => res.data),
+
+  // ===========================================
+  // RESCHEDULE OPERATIONS
+  // ===========================================
+
+  // Check for conflicts before rescheduling
+  checkRescheduleConflicts: (
+    lessonId: string,
+    input: ConflictCheckInput
+  ): Promise<ConflictCheckResult> =>
+    apiClient
+      .get<{ status: string; data: ConflictCheckResult }>(
+        `/lessons/${lessonId}/check-conflicts`,
+        { params: input }
+      )
+      .then((res) => res.data),
+
+  // Reschedule a lesson
+  reschedule: (lessonId: string, input: RescheduleInput): Promise<Lesson> =>
+    apiClient
+      .post<{ status: string; data: Lesson }>(`/lessons/${lessonId}/reschedule`, input)
       .then((res) => res.data),
 };
 

@@ -166,6 +166,9 @@ model School {
   googleDriveFolders   GoogleDriveFolder[]
   googleDriveFiles     GoogleDriveFile[]
 
+  // Notification preferences
+  notificationPreferences NotificationPreference[]
+
   @@index([slug])
   @@index([stripeAccountId])
 }
@@ -192,15 +195,16 @@ model User {
   updatedAt           DateTime       @updatedAt
 
   // Relations
-  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  teacher        Teacher?
-  parent         Parent?
-  student        Student?
-  notes          Note[]             @relation("NoteAuthor")
-  resources      Resource[]         @relation("ResourceUploader")
-  refreshTokens  RefreshToken[]
-  loginAttempts  LoginAttempt[]
-  deletionAudits DeletionAuditLog[]
+  school                  School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher                 Teacher?
+  parent                  Parent?
+  student                 Student?
+  notes                   Note[]                   @relation("NoteAuthor")
+  resources               Resource[]               @relation("ResourceUploader")
+  refreshTokens           RefreshToken[]
+  loginAttempts           LoginAttempt[]
+  deletionAudits          DeletionAuditLog[]
+  notificationPreferences NotificationPreference[]
 
   @@unique([schoolId, email])
   @@index([schoolId])
@@ -1041,4 +1045,39 @@ model GoogleDriveFile {
   @@index([driveFolderId])
   @@index([uploadedBy])
   @@index([deletedInDrive])
+}
+
+// ===========================================
+// NOTIFICATION PREFERENCES
+// ===========================================
+
+enum NotificationType {
+  LESSON_REMINDER
+  LESSON_RESCHEDULED
+  PAYMENT_RECEIVED
+  INVOICE_CREATED
+  HYBRID_BOOKING_OPENED
+  HYBRID_BOOKING_REMINDER
+  FILE_UPLOADED
+  ATTENDANCE_SUMMARY
+}
+
+model NotificationPreference {
+  id                        String   @id @default(uuid())
+  userId                    String
+  schoolId                  String
+  emailNotificationsEnabled Boolean  @default(true)
+  notificationTypes         Json     @default("{}")
+  quietHoursEnabled         Boolean  @default(true)
+  quietHoursStart           String?  @default("21:00")
+  quietHoursEnd             String?  @default("07:00")
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, schoolId])
+  @@index([schoolId])
+  @@index([userId])
 }

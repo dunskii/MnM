@@ -902,3 +902,509 @@ export async function sendOverdueNoticeEmail(
     html: baseTemplate(content, `OVERDUE: Invoice ${data.invoiceNumber} for ${formattedAmount} requires immediate payment`),
   });
 }
+
+// ===========================================
+// LESSON RESCHEDULE EMAILS
+// ===========================================
+
+interface LessonRescheduledData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  oldDay: string;
+  oldTime: string;
+  newDay: string;
+  newTime: string;
+  teacherName: string;
+  locationName: string;
+  roomName: string;
+  reason?: string;
+}
+
+/**
+ * Send lesson rescheduled notification
+ */
+export async function sendLessonRescheduledEmail(
+  to: string,
+  data: LessonRescheduledData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Lesson Schedule Update
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      ${data.studentName}'s <strong>${data.lessonName}</strong> lesson has been rescheduled.
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td colspan="2" style="padding: 0 0 10px; color: #9DA5AF; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+            Previous Schedule
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #9DA5AF; font-size: 14px; text-decoration: line-through;">
+            ${data.oldDay} at ${data.oldTime}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding: 15px 0 10px; color: #4580E4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid #e0e0e0;">
+            New Schedule
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Day:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.newDay}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Time:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.newTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Teacher:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.teacherName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Location:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationName}, ${data.roomName}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${data.reason ? `
+    <p style="margin: 15px 0; color: #9DA5AF; font-size: 14px;">
+      <strong>Reason:</strong> ${data.reason}
+    </p>
+    ` : ''}
+
+    ${ctaButton('View Schedule', `${config.frontendUrl}/parent/schedule`)}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you have any questions about this change, please contact us.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Lesson Rescheduled - ${data.lessonName}`,
+    html: baseTemplate(content, `${data.studentName}'s ${data.lessonName} lesson has been rescheduled to ${data.newDay} at ${data.newTime}`),
+  });
+}
+
+// ===========================================
+// HYBRID BOOKING EMAILS
+// ===========================================
+
+interface HybridBookingOpenedData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  bookingDeadline: string;
+  availableWeeks: number[];
+  bookingUrl: string;
+}
+
+interface HybridBookingReminderData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  bookingDeadline: string;
+  unbookedWeeks: number[];
+  bookingUrl: string;
+}
+
+interface IndividualSessionBookedData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  sessionDate: string;
+  sessionTime: string;
+  teacherName: string;
+  locationName: string;
+  roomName: string;
+  weekNumber: number;
+}
+
+interface IndividualSessionRescheduledData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  weekNumber: number;
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  teacherName: string;
+  locationName: string;
+}
+
+/**
+ * Send hybrid booking period opened notification
+ * CRITICAL: This drives parent engagement for booking individual sessions
+ */
+export async function sendHybridBookingOpenedEmail(
+  to: string,
+  data: HybridBookingOpenedData
+): Promise<boolean> {
+  const weeksDisplay = data.availableWeeks.length > 3
+    ? `Weeks ${data.availableWeeks[0]}, ${data.availableWeeks[1]}, ${data.availableWeeks[2]}, and ${data.availableWeeks.length - 3} more`
+    : `Week${data.availableWeeks.length > 1 ? 's' : ''} ${data.availableWeeks.join(', ')}`;
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Book Your Individual Session!
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Individual session bookings are now open for <strong>${data.studentName}</strong>'s <strong>${data.lessonName}</strong> class!
+    </p>
+
+    <div style="background-color: #FFCE00; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 8px; color: #080808; font-size: 14px; font-weight: 600;">
+        Available for: ${weeksDisplay}
+      </p>
+      <p style="margin: 0; color: #080808; font-size: 14px;">
+        <strong>Booking Deadline:</strong> ${data.bookingDeadline}
+      </p>
+    </div>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Book your preferred time slot now before they fill up!
+    </p>
+
+    ${ctaButton('Book Now', data.bookingUrl, '#4580E4')}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      Individual sessions are a great opportunity for focused one-on-one time with the teacher.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Book Individual Session - ${data.lessonName}`,
+    html: baseTemplate(content, `Individual session bookings are now open for ${data.studentName}'s ${data.lessonName} class - book before ${data.bookingDeadline}`),
+  });
+}
+
+/**
+ * Send hybrid booking reminder to parents who haven't booked
+ */
+export async function sendHybridBookingReminderEmail(
+  to: string,
+  data: HybridBookingReminderData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #FFCE00; font-size: 22px; font-weight: 600;">
+      Don't Forget to Book!
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      This is a friendly reminder that you still need to book individual sessions for <strong>${data.studentName}</strong>'s <strong>${data.lessonName}</strong> class.
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #FFCE00;">
+      <p style="margin: 0 0 8px; color: #080808; font-size: 14px;">
+        <strong>Unbooked weeks:</strong> ${data.unbookedWeeks.join(', ')}
+      </p>
+      <p style="margin: 0; color: #ff4040; font-size: 14px; font-weight: 600;">
+        Deadline: ${data.bookingDeadline}
+      </p>
+    </div>
+
+    ${ctaButton('Book Now', data.bookingUrl, '#FFCE00')}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you don't book before the deadline, a time will be assigned automatically.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Reminder: Book Individual Session - ${data.lessonName}`,
+    html: baseTemplate(content, `Reminder: Book ${data.studentName}'s individual session for ${data.lessonName} before ${data.bookingDeadline}`),
+  });
+}
+
+/**
+ * Send individual session booking confirmation
+ */
+export async function sendIndividualSessionBookedEmail(
+  to: string,
+  data: IndividualSessionBookedData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Individual Session Booked!
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Great news! You've successfully booked an individual session for <strong>${data.studentName}</strong>.
+    </p>
+
+    <div style="background-color: #96DAC9; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px; color: #080808; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        Session Details - Week ${data.weekNumber}
+      </p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Lesson:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.lessonName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Date:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.sessionDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Time:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.sessionTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Teacher:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.teacherName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Location:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationName}, ${data.roomName}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${ctaButton('View Schedule', `${config.frontendUrl}/parent/schedule`)}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      Need to reschedule? You can change your booking up to 24 hours before the session.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Session Booked - ${data.lessonName} Week ${data.weekNumber}`,
+    html: baseTemplate(content, `${data.studentName}'s individual session for ${data.lessonName} is booked for ${data.sessionDate} at ${data.sessionTime}`),
+  });
+}
+
+/**
+ * Send individual session rescheduled notification
+ */
+export async function sendIndividualSessionRescheduledEmail(
+  to: string,
+  data: IndividualSessionRescheduledData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Session Rescheduled
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      ${data.studentName}'s individual session for <strong>${data.lessonName}</strong> (Week ${data.weekNumber}) has been rescheduled.
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td colspan="2" style="padding: 0 0 10px; color: #9DA5AF; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+            Previous Time
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #9DA5AF; font-size: 14px; text-decoration: line-through;">
+            ${data.oldDate} at ${data.oldTime}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding: 15px 0 10px; color: #4580E4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid #e0e0e0;">
+            New Time
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Date:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.newDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Time:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.newTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Teacher:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.teacherName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Location:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationName}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${ctaButton('View Schedule', `${config.frontendUrl}/parent/schedule`)}
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you have any questions about this change, please contact us.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Session Rescheduled - ${data.lessonName} Week ${data.weekNumber}`,
+    html: baseTemplate(content, `${data.studentName}'s individual session for ${data.lessonName} has been rescheduled to ${data.newDate} at ${data.newTime}`),
+  });
+}
+
+// ===========================================
+// MEET & GREET REMINDER EMAIL
+// ===========================================
+
+interface MeetAndGreetReminderData {
+  parentName: string;
+  childName: string;
+  scheduledDateTime: string;
+  locationName: string;
+  locationAddress: string;
+  teacherName: string;
+}
+
+/**
+ * Send meet & greet reminder 24 hours before
+ */
+export async function sendMeetAndGreetReminderEmail(
+  to: string,
+  data: MeetAndGreetReminderData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Meet & Greet Tomorrow!
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      This is a friendly reminder that ${data.childName}'s meet & greet is coming up soon!
+    </p>
+
+    <div style="background-color: #96DAC9; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Date & Time:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.scheduledDateTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Location:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Address:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationAddress}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Teacher:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.teacherName}</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="margin: 15px 0 0; color: #080808; font-size: 16px; line-height: 1.6;">
+      We're looking forward to meeting ${data.childName} and introducing them to the wonderful world of music!
+    </p>
+
+    <p style="margin: 20px 0 0; color: #9DA5AF; font-size: 13px;">
+      If you need to reschedule, please contact us as soon as possible.
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Reminder: Meet & Greet Tomorrow - Music 'n Me`,
+    html: baseTemplate(content, `Reminder: ${data.childName}'s meet & greet is tomorrow at ${data.scheduledDateTime}`),
+  });
+}
+
+// ===========================================
+// LESSON REMINDER EMAIL
+// ===========================================
+
+interface LessonReminderData {
+  parentName: string;
+  studentName: string;
+  lessonName: string;
+  lessonDate: string;
+  lessonTime: string;
+  teacherName: string;
+  locationName: string;
+  roomName: string;
+}
+
+/**
+ * Send lesson reminder 24 hours before
+ */
+export async function sendLessonReminderEmail(
+  to: string,
+  data: LessonReminderData
+): Promise<boolean> {
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #080808; font-size: 22px; font-weight: 600;">
+      Lesson Reminder
+    </h2>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Hi ${data.parentName},
+    </p>
+
+    <p style="margin: 0 0 15px; color: #080808; font-size: 16px; line-height: 1.6;">
+      Just a reminder that ${data.studentName} has a <strong>${data.lessonName}</strong> lesson coming up!
+    </p>
+
+    <div style="background-color: #FCF6E6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Date:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.lessonDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Time:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.lessonTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Teacher:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.teacherName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px;"><strong>Location:</strong></td>
+          <td style="padding: 4px 0; color: #080808; font-size: 14px; text-align: right;">${data.locationName}, ${data.roomName}</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="margin: 15px 0 0; color: #9DA5AF; font-size: 13px;">
+      See you soon!
+    </p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `Lesson Tomorrow - ${data.lessonName}`,
+    html: baseTemplate(content, `Reminder: ${data.studentName}'s ${data.lessonName} lesson is tomorrow at ${data.lessonTime}`),
+  });
+}

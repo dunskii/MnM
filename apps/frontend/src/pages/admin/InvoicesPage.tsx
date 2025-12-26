@@ -37,7 +37,6 @@ import {
   useAdminInvoices,
   useInvoiceStatistics,
   useSendInvoice,
-  useDeleteInvoice,
 } from '../../hooks/useInvoices';
 import {
   Invoice,
@@ -123,7 +122,6 @@ export default function InvoicesPage() {
 
   // Mutations
   const sendMutation = useSendInvoice();
-  const deleteMutation = useDeleteInvoice();
 
   // Filter invoices by search query
   const filteredInvoices = useMemo(() => {
@@ -165,7 +163,7 @@ export default function InvoicesPage() {
     {
       id: 'invoiceNumber',
       label: 'Invoice #',
-      render: (invoice) => (
+      format: (_value, invoice) => (
         <Typography
           variant="body2"
           sx={{
@@ -183,18 +181,18 @@ export default function InvoicesPage() {
     {
       id: 'family',
       label: 'Family',
-      render: (invoice) => invoice.family.name,
+      format: (_value, invoice) => invoice.family.name,
     },
     {
       id: 'description',
       label: 'Description',
-      render: (invoice) =>
+      format: (_value, invoice) =>
         invoice.description || invoice.term?.name || '-',
     },
     {
       id: 'total',
       label: 'Total',
-      render: (invoice) => (
+      format: (_value, invoice) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {formatCurrency(invoice.total)}
         </Typography>
@@ -203,7 +201,7 @@ export default function InvoicesPage() {
     {
       id: 'amountPaid',
       label: 'Paid',
-      render: (invoice) => {
+      format: (_value, invoice) => {
         const paid = parseFloat(invoice.amountPaid);
         const total = parseFloat(invoice.total);
         if (paid === 0) return '-';
@@ -220,7 +218,7 @@ export default function InvoicesPage() {
     {
       id: 'dueDate',
       label: 'Due Date',
-      render: (invoice) => {
+      format: (_value, invoice) => {
         const isOverdue =
           invoice.status !== 'PAID' &&
           invoice.status !== 'CANCELLED' &&
@@ -238,7 +236,7 @@ export default function InvoicesPage() {
     {
       id: 'status',
       label: 'Status',
-      render: (invoice) => (
+      format: (_value, invoice) => (
         <Chip
           label={invoice.status.replace('_', ' ')}
           size="small"
@@ -255,7 +253,7 @@ export default function InvoicesPage() {
       id: 'actions',
       label: 'Actions',
       align: 'center',
-      render: (invoice) => (
+      format: (_value, invoice) => (
         <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
           <Tooltip title="View Details">
             <IconButton

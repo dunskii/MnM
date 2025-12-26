@@ -23,6 +23,7 @@ export interface PageHeaderProps {
   actionLabel?: string;
   actionIcon?: React.ReactNode;
   onAction?: () => void;
+  action?: React.ReactNode; // Custom action content (overrides actionLabel/onAction)
 }
 
 // ===========================================
@@ -36,6 +37,7 @@ export default function PageHeader({
   actionLabel,
   actionIcon = <AddIcon />,
   onAction,
+  action,
 }: PageHeaderProps) {
   return (
     <Box sx={{ mb: 3 }}>
@@ -80,14 +82,18 @@ export default function PageHeader({
             </Typography>
           )}
         </Box>
-        {actionLabel && onAction && (
-          <Button
-            variant="contained"
-            startIcon={actionIcon}
-            onClick={onAction}
-          >
-            {actionLabel}
-          </Button>
+        {action ? (
+          action
+        ) : (
+          actionLabel && onAction && (
+            <Button
+              variant="contained"
+              startIcon={actionIcon}
+              onClick={onAction}
+            >
+              {actionLabel}
+            </Button>
+          )
         )}
       </Box>
     </Box>

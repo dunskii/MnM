@@ -223,7 +223,7 @@ export const pricingPackagesApi = {
       '/invoices/admin/pricing-packages',
       { params: { includeInactive: includeInactive.toString() } }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -233,7 +233,7 @@ export const pricingPackagesApi = {
     const response = await apiClient.get<ApiResponse<PricingPackage>>(
       `/invoices/admin/pricing-packages/${id}`
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -244,7 +244,7 @@ export const pricingPackagesApi = {
       '/invoices/admin/pricing-packages',
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -258,7 +258,7 @@ export const pricingPackagesApi = {
       `/invoices/admin/pricing-packages/${id}`,
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -282,7 +282,7 @@ export const adminInvoicesApi = {
       '/invoices/admin/invoices',
       { params: filters }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -292,7 +292,7 @@ export const adminInvoicesApi = {
     const response = await apiClient.get<ApiResponse<InvoiceStatistics>>(
       '/invoices/admin/invoices/statistics'
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -302,7 +302,7 @@ export const adminInvoicesApi = {
     const response = await apiClient.get<ApiResponse<Invoice>>(
       `/invoices/admin/invoices/${id}`
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -313,7 +313,7 @@ export const adminInvoicesApi = {
       '/invoices/admin/invoices',
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -326,7 +326,7 @@ export const adminInvoicesApi = {
       '/invoices/admin/invoices/generate',
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -337,7 +337,7 @@ export const adminInvoicesApi = {
       `/invoices/admin/invoices/${id}`,
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -354,7 +354,7 @@ export const adminInvoicesApi = {
     const response = await apiClient.post<ApiResponse<Invoice>>(
       `/invoices/admin/invoices/${id}/send`
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -365,7 +365,7 @@ export const adminInvoicesApi = {
       `/invoices/admin/invoices/${id}/cancel`,
       { reason }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -379,7 +379,7 @@ export const adminInvoicesApi = {
       `/invoices/admin/invoices/${id}/payment`,
       data
     );
-    return response.data.data;
+    return response.data;
   },
 };
 
@@ -395,7 +395,7 @@ export const parentInvoicesApi = {
     const response = await apiClient.get<ApiResponse<Invoice[]>>(
       '/invoices/parent/invoices'
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -405,7 +405,7 @@ export const parentInvoicesApi = {
     const response = await apiClient.get<ApiResponse<Invoice>>(
       `/invoices/parent/invoices/${id}`
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -420,7 +420,7 @@ export const parentInvoicesApi = {
       `/invoices/parent/invoices/${id}/pay`,
       { successUrl, cancelUrl }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -430,6 +430,6 @@ export const parentInvoicesApi = {
     const response = await apiClient.get<ApiResponse<Payment[]>>(
       '/invoices/parent/payments'
     );
-    return response.data.data;
+    return response.data;
   },
 };

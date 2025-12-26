@@ -1,7 +1,7 @@
 // ===========================================
 // Teacher Dashboard Page
 // ===========================================
-// Dashboard for teachers with attendance, notes, and all school lessons
+// Dashboard for teachers with attendance, notes, files, and M&G
 
 import { useState } from 'react';
 import {
@@ -9,12 +9,15 @@ import {
   Grid,
   Card,
   CardContent,
+  CardHeader,
   Typography,
   Button,
   List,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
+  ListItemAvatar,
+  Avatar,
   Chip,
   Alert,
   Dialog,
@@ -36,14 +39,20 @@ import {
   School as SchoolIcon,
   Person as PersonIcon,
   CalendarToday as CalendarIcon,
+  InsertDriveFile as FileIcon,
+  Handshake as MeetAndGreetIcon,
+  CloudUpload as UploadIcon,
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import AttendanceMarker from '../../components/attendance/AttendanceMarker';
 import NoteEditor from '../../components/notes/NoteEditor';
+import { StatWidget } from '../../components/dashboard/StatWidget';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLessons, useLessonsByTeacher } from '../../hooks/useLessons';
 import { useTeacherPendingNotes, useTeacherWeeklySummary } from '../../hooks/useNotes';
+import { useTeacherRecentFiles, useAssignedMeetAndGreets } from '../../hooks/useDashboard';
 import { useTeachers } from '../../hooks/useUsers';
 import { getNoteStatusColor, getNoteStatusLabel } from '../../api/notes.api';
 import { Lesson } from '../../api/lessons.api';
@@ -52,50 +61,16 @@ import { Lesson } from '../../api/lessons.api';
 // TYPES
 // ===========================================
 
-// ===========================================
-// STAT CARD COMPONENT
-// ===========================================
-
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color?: 'primary' | 'success' | 'warning' | 'error';
-  loading?: boolean;
-}
-
-function StatCard({ title, value, icon, color = 'primary', loading }: StatCardProps) {
-  return (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography color="text.secondary" variant="body2" gutterBottom>
-              {title}
-            </Typography>
-            {loading ? (
-              <Skeleton variant="text" width={60} height={40} />
-            ) : (
-              <Typography variant="h4" component="div" color={`${color}.main`}>
-                {value}
-              </Typography>
-            )}
-          </Box>
-          <Box
-            sx={{
-              bgcolor: `${color}.light`,
-              borderRadius: 2,
-              p: 1.5,
-              color: `${color}.main`,
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
+// File icon helper for MIME types
+const getFileIcon = (mimeType: string) => {
+  if (mimeType.includes('image')) return '🖼️';
+  if (mimeType.includes('audio')) return '🎵';
+  if (mimeType.includes('video')) return '🎬';
+  if (mimeType.includes('pdf')) return '📄';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '📊';
+  if (mimeType.includes('document') || mimeType.includes('word')) return '📝';
+  return '📁';
+};
 
 // ===========================================
 // TODAY'S LESSONS COMPONENT
@@ -317,6 +292,7 @@ function AllLessonsList({ lessons, isLoading, onMarkAttendance, onEditNotes }: A
 
 export default function TeacherDashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // State for modals
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
@@ -337,6 +313,10 @@ export default function TeacherDashboardPage() {
   const { data: weeklySummary, isLoading: weeklySummaryLoading } = useTeacherWeeklySummary(
     teacher?.id || ''
   );
+
+  // New dashboard hooks for files and M&G
+  const { data: recentFiles, isLoading: filesLoading } = useTeacherRecentFiles(5);
+  const { data: assignedMeetAndGreets, isLoading: meetAndGreetsLoading } = useAssignedMeetAndGreets(5);
 
   // Handle mark attendance
   const handleMarkAttendance = (lesson: Lesson) => {
@@ -375,26 +355,28 @@ export default function TeacherDashboardPage() {
         subtitle={`Welcome back${user?.firstName ? `, ${user.firstName}` : ''}!`}
       />
 
-      {/* Stats Row */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
+      {/* Stats Row - Using new StatWidget */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
             title="Today's Lessons"
             value={todayLessonsCount}
             icon={<CalendarIcon />}
+            color="primary"
             loading={myLessonsLoading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="My Total Lessons"
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="My Lessons"
             value={myLessons?.filter((l) => l.isActive).length || 0}
             icon={<SchoolIcon />}
+            color="secondary"
             loading={myLessonsLoading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
             title="Pending Notes"
             value={pendingNotes?.totalPending || 0}
             icon={<EditIcon />}
@@ -402,13 +384,34 @@ export default function TeacherDashboardPage() {
             loading={pendingNotesLoading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Weekly Completion"
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Completion"
             value={`${weeklySummary?.overallCompletionRate || 100}%`}
             icon={<CheckIcon />}
             color={(weeklySummary?.overallCompletionRate || 100) < 100 ? 'warning' : 'success'}
+            subtitle="This week"
             loading={weeklySummaryLoading}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Recent Files"
+            value={recentFiles?.length || 0}
+            icon={<UploadIcon />}
+            color="info"
+            subtitle="Last 7 days"
+            loading={filesLoading}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Meet & Greets"
+            value={assignedMeetAndGreets?.length || 0}
+            icon={<MeetAndGreetIcon />}
+            color={(assignedMeetAndGreets?.length || 0) > 0 ? 'warning' : 'success'}
+            subtitle="Assigned to you"
+            loading={meetAndGreetsLoading}
           />
         </Grid>
       </Grid>
@@ -452,7 +455,7 @@ export default function TeacherDashboardPage() {
 
         {/* Weekly Progress */}
         <Grid item xs={12} lg={6}>
-          <Card>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 <EditIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
@@ -494,6 +497,197 @@ export default function TeacherDashboardPage() {
                 </Box>
               ) : (
                 <Alert severity="info">No weekly data available.</Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Recently Uploaded Files */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
+            <CardHeader
+              title={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <UploadIcon color="primary" />
+                  <Typography variant="h6">Recently Uploaded Files</Typography>
+                </Box>
+              }
+              action={
+                <Button
+                  size="small"
+                  onClick={() => navigate('/admin/google-drive')}
+                >
+                  View All
+                </Button>
+              }
+              sx={{ pb: 0 }}
+            />
+            <Divider sx={{ mx: 2, mt: 2 }} />
+            <CardContent>
+              {filesLoading ? (
+                <Box>
+                  {[1, 2, 3].map((i) => (
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="40%" />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : recentFiles && recentFiles.length > 0 ? (
+                <List disablePadding>
+                  {recentFiles.map((file) => (
+                    <ListItem key={file.id} sx={{ px: 0, py: 1 }}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#a3d9f6',
+                            color: '#4580E4',
+                            width: 40,
+                            height: 40,
+                            fontSize: '1.2rem',
+                          }}
+                        >
+                          {getFileIcon(file.mimeType)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            variant="body2"
+                            fontWeight={500}
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {file.fileName}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {file.lessonName || file.studentName || 'General'} •{' '}
+                            {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true })}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ py: 3, textAlign: 'center' }}>
+                  <FileIcon sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5 }} />
+                  <Typography color="text.secondary" sx={{ mt: 1 }}>
+                    No files uploaded recently
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ mt: 2 }}
+                    onClick={() => navigate('/admin/google-drive')}
+                  >
+                    Upload Files
+                  </Button>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Assigned Meet & Greets */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
+            <CardHeader
+              title={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <MeetAndGreetIcon color="primary" />
+                  <Typography variant="h6">Assigned Meet & Greets</Typography>
+                </Box>
+              }
+              action={
+                assignedMeetAndGreets && assignedMeetAndGreets.length > 0 && (
+                  <Chip
+                    label={`${assignedMeetAndGreets.length} pending`}
+                    size="small"
+                    sx={{
+                      bgcolor: '#ffd4cc',
+                      color: '#e67761',
+                      fontWeight: 600,
+                    }}
+                  />
+                )
+              }
+              sx={{ pb: 0 }}
+            />
+            <Divider sx={{ mx: 2, mt: 2 }} />
+            <CardContent>
+              {meetAndGreetsLoading ? (
+                <Box>
+                  {[1, 2, 3].map((i) => (
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="40%" />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : assignedMeetAndGreets && assignedMeetAndGreets.length > 0 ? (
+                <List disablePadding>
+                  {assignedMeetAndGreets.map((mg) => (
+                    <ListItem key={mg.id} sx={{ px: 0, py: 1 }}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: mg.status === 'APPROVED' ? '#c5ebe2' : '#ffd4cc',
+                            color: mg.status === 'APPROVED' ? '#5cb399' : '#e67761',
+                            width: 40,
+                            height: 40,
+                          }}
+                        >
+                          <PersonIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" fontWeight={500}>
+                            {mg.studentName}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {mg.scheduledDateTime
+                              ? format(new Date(mg.scheduledDateTime), 'MMM d, yyyy h:mm a')
+                              : 'Not yet scheduled'}
+                          </Typography>
+                        }
+                      />
+                      <Chip
+                        label={mg.status === 'APPROVED' ? 'Scheduled' : 'Pending'}
+                        size="small"
+                        sx={{
+                          bgcolor: mg.status === 'APPROVED' ? '#c5ebe2' : '#FFE066',
+                          color: mg.status === 'APPROVED' ? '#5cb399' : '#E6B800',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ py: 3, textAlign: 'center' }}>
+                  <MeetAndGreetIcon sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5 }} />
+                  <Typography color="text.secondary" sx={{ mt: 1 }}>
+                    No meet & greets assigned to you
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Check back later for new assignments
+                  </Typography>
+                </Box>
               )}
             </CardContent>
           </Card>

@@ -15,10 +15,6 @@ import {
   Alert,
   Skeleton,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
 } from '@mui/material';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -63,14 +59,6 @@ function formatCurrency(value: string | number): string {
     style: 'currency',
     currency: 'AUD',
   }).format(num);
-}
-
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-AU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(dateString));
 }
 
 function formatShortDate(dateString: string): string {
@@ -338,14 +326,14 @@ export default function ParentInvoicesPage() {
     setPayingInvoiceId(invoice.id);
     try {
       const result = await paymentMutation.mutateAsync({
-        invoiceId: invoice.id,
+        id: invoice.id,
         successUrl: `${window.location.origin}/parent/invoices?success=true`,
         cancelUrl: `${window.location.origin}/parent/invoices?cancelled=true`,
       });
 
       // Redirect to Stripe checkout
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+      if (result.url) {
+        window.location.href = result.url;
       }
     } catch (err) {
       console.error('Payment error:', err);

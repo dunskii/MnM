@@ -50,6 +50,8 @@ export const authenticate = async (
         email: true,
         isActive: true,
         deletionStatus: true,
+        teacher: { select: { id: true } },
+        parent: { select: { id: true } },
       },
     });
 
@@ -73,9 +75,12 @@ export const authenticate = async (
     // Attach user to request
     req.user = {
       userId: user.id,
+      id: user.id, // Alias for convenience
       schoolId: user.schoolId,
       role: user.role,
       email: user.email,
+      teacherId: user.teacher?.id,
+      parentId: user.parent?.id,
     };
 
     next();
@@ -112,15 +117,20 @@ export const optionalAuthenticate = async (
           email: true,
           isActive: true,
           deletionStatus: true,
+          teacher: { select: { id: true } },
+          parent: { select: { id: true } },
         },
       });
 
       if (user && user.isActive && user.deletionStatus === 'ACTIVE') {
         req.user = {
           userId: user.id,
+          id: user.id,
           schoolId: user.schoolId,
           role: user.role,
           email: user.email,
+          teacherId: user.teacher?.id,
+          parentId: user.parent?.id,
         };
       }
     } catch {

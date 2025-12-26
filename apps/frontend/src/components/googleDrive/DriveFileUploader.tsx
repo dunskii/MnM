@@ -41,11 +41,12 @@ import { useUploadDriveFile } from '../../hooks/useGoogleDrive';
 // TYPES
 // ===========================================
 
-interface DriveFileUploaderProps {
+export interface DriveFileUploaderProps {
   lessonId?: string;
   studentId?: string;
   onUploaded?: () => void;
   onClose?: () => void;
+  open?: boolean; // When true, shows as dialog; when undefined, shows inline
 }
 
 // ===========================================
@@ -57,7 +58,10 @@ export default function DriveFileUploader({
   studentId,
   onUploaded,
   onClose,
+  open = true,
 }: DriveFileUploaderProps) {
+  // If open is false, don't render
+  if (!open) return null;
   // State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<FileVisibility>('ALL');

@@ -8,7 +8,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DriveFileUploader from '../DriveFileUploader';
 import { createWrapper } from '../../../test/utils';
-import { googleDriveApi } from '../../../api/googleDrive.api';
 
 // Mock the API
 vi.mock('../../../api/googleDrive.api', async () => {
@@ -42,7 +41,6 @@ vi.mock('../../../api/resources.api', () => ({
 }));
 
 describe('DriveFileUploader', () => {
-  const mockOnUploaded = vi.fn();
   const mockOnClose = vi.fn();
 
   beforeEach(() => {

@@ -114,9 +114,12 @@ export interface RateLimitInfo {
 
 export interface AuthenticatedUser {
   userId: string;
+  id: string; // Alias for userId (for convenience)
   schoolId: string;
   role: UserRole;
   email: string;
+  teacherId?: string; // Set if user is a teacher
+  parentId?: string;  // Set if user is a parent
 }
 
 // Extend Express Request type

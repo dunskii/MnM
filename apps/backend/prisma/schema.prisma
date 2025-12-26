@@ -106,15 +106,15 @@ enum DeletionStatus {
 }
 
 enum SyncStatus {
-  PENDING       // Never synced
-  SYNCING       // Sync in progress
-  SYNCED        // Last sync successful
-  ERROR         // Last sync failed
+  PENDING // Never synced
+  SYNCING // Sync in progress
+  SYNCED // Last sync successful
+  ERROR // Last sync failed
 }
 
 enum UploadSource {
-  GOOGLE_DRIVE  // Synced from Drive
-  PORTAL        // Uploaded via portal
+  GOOGLE_DRIVE // Synced from Drive
+  PORTAL // Uploaded via portal
 }
 
 // ===========================================
@@ -162,9 +162,9 @@ model School {
   retentionPolicy      SchoolRetentionPolicy?
 
   // Google Drive relations
-  googleDriveAuth      GoogleDriveAuth?
-  googleDriveFolders   GoogleDriveFolder[]
-  googleDriveFiles     GoogleDriveFile[]
+  googleDriveAuth    GoogleDriveAuth?
+  googleDriveFolders GoogleDriveFolder[]
+  googleDriveFiles   GoogleDriveFile[]
 
   // Notification preferences
   notificationPreferences NotificationPreference[]
@@ -263,6 +263,8 @@ model Teacher {
 
   @@index([schoolId])
   @@index([userId])
+  // Composite index for dashboard active teacher counts
+  @@index([schoolId, isActive])
 }
 
 model TeacherInstrument {
@@ -346,6 +348,8 @@ model Student {
   @@index([familyId])
   @@index([ageGroup])
   @@index([deletionStatus])
+  // Composite index for dashboard active student counts
+  @@index([schoolId, isActive, deletionStatus])
 }
 
 model Family {
@@ -366,6 +370,8 @@ model Family {
 
   @@index([schoolId])
   @@index([deletionStatus])
+  // Composite index for dashboard active family counts
+  @@index([schoolId, deletionStatus])
 }
 
 // ===========================================
@@ -545,6 +551,9 @@ model Lesson {
   @@index([teacherId])
   @@index([roomId])
   @@index([dayOfWeek])
+  // Composite indexes for dashboard lesson queries
+  @@index([schoolId, isActive])
+  @@index([schoolId, teacherId, isActive])
 }
 
 model LessonEnrollment {
@@ -640,6 +649,9 @@ model Attendance {
   @@index([lessonId])
   @@index([studentId])
   @@index([date])
+  // Composite index for dashboard attendance rate queries by date range
+  @@index([lessonId, date])
+  @@index([lessonId, date, status])
 }
 
 model Note {
@@ -733,6 +745,9 @@ model MeetAndGreet {
   @@index([verificationToken])
   @@index([registrationToken])
   @@index([contact1Email])
+  // Composite indexes for dashboard meet & greet queries
+  @@index([schoolId, status])
+  @@index([schoolId, status, scheduledDateTime])
 }
 
 // ===========================================
@@ -769,6 +784,8 @@ model Invoice {
   @@index([familyId])
   @@index([status])
   @@index([dueDate])
+  // Composite index for dashboard outstanding invoice queries
+  @@index([schoolId, status])
 }
 
 model InvoiceItem {
@@ -948,16 +965,16 @@ model FinancialAuditLog {
 // ===========================================
 
 model GoogleDriveAuth {
-  id            String   @id @default(uuid())
-  schoolId      String   @unique
-  school        School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  schoolId String @unique
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  accessToken   String   // Encrypted
-  refreshToken  String   // Encrypted
-  expiresAt     DateTime
+  accessToken  String // Encrypted
+  refreshToken String // Encrypted
+  expiresAt    DateTime
 
-  scope         String   // Comma-separated scopes
-  tokenType     String   @default("Bearer")
+  scope     String // Comma-separated scopes
+  tokenType String @default("Bearer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -966,76 +983,78 @@ model GoogleDriveAuth {
 }
 
 model GoogleDriveFolder {
-  id        String   @id @default(uuid())
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   // Google Drive folder details
-  driveFolderId   String  // Google Drive folder ID
-  folderName      String  // Human-readable name
-  folderUrl       String  // Direct link to folder
+  driveFolderId String // Google Drive folder ID
+  folderName    String // Human-readable name
+  folderUrl     String // Direct link to folder
 
   // Mapping to portal entities (one of these must be set)
-  lessonId        String? @unique
-  lesson          Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId String? @unique
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  studentId       String? @unique
-  student         Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String?  @unique
+  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   // Sync settings
-  syncEnabled     Boolean @default(true)
-  lastSyncAt      DateTime?
-  syncStatus      SyncStatus @default(PENDING)
-  syncError       String?
+  syncEnabled Boolean    @default(true)
+  lastSyncAt  DateTime?
+  syncStatus  SyncStatus @default(PENDING)
+  syncError   String?
 
   // Files in this folder
-  files           GoogleDriveFile[]
+  files GoogleDriveFile[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([schoolId, driveFolderId])
   @@index([schoolId])
   @@index([driveFolderId])
   @@index([lessonId])
   @@index([studentId])
-  @@unique([schoolId, driveFolderId])
+  // Composite index for dashboard sync status queries
+  @@index([schoolId, syncStatus])
 }
 
 model GoogleDriveFile {
-  id        String   @id @default(uuid())
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   // Google Drive file details
-  driveFileId     String  @unique  // Google Drive file ID
-  fileName        String
-  mimeType        String
-  fileSize        Int?    // Bytes
-  webViewLink     String  // Link to view in Drive
-  webContentLink  String? // Direct download link
-  thumbnailLink   String?
-  modifiedTime    DateTime
-  createdTime     DateTime
+  driveFileId    String   @unique // Google Drive file ID
+  fileName       String
+  mimeType       String
+  fileSize       Int? // Bytes
+  webViewLink    String // Link to view in Drive
+  webContentLink String? // Direct download link
+  thumbnailLink  String?
+  modifiedTime   DateTime
+  createdTime    DateTime
 
   // Portal mapping
-  driveFolderId   String
-  driveFolder     GoogleDriveFolder @relation(fields: [driveFolderId], references: [id], onDelete: Cascade)
+  driveFolderId String
+  driveFolder   GoogleDriveFolder @relation(fields: [driveFolderId], references: [id], onDelete: Cascade)
 
   // Portal storage (for offline access / CDN)
-  portalFileId    String?  // ID in DigitalOcean Spaces (optional)
-  portalFileUrl   String?  // CDN URL for fast downloads
+  portalFileId  String? // ID in DigitalOcean Spaces (optional)
+  portalFileUrl String? // CDN URL for fast downloads
 
   // File metadata
-  visibility      FileVisibility @default(ALL)
-  tags            Json           @default("[]")
+  visibility FileVisibility @default(ALL)
+  tags       Json           @default("[]")
 
   // Upload source
-  uploadedBy      String?  // User ID if uploaded via portal
-  uploadedVia     UploadSource @default(GOOGLE_DRIVE)
+  uploadedBy  String? // User ID if uploaded via portal
+  uploadedVia UploadSource @default(GOOGLE_DRIVE)
 
   // Deletion tracking
-  deletedInDrive  Boolean @default(false)
-  deletedAt       DateTime?
+  deletedInDrive Boolean   @default(false)
+  deletedAt      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1045,6 +1064,10 @@ model GoogleDriveFile {
   @@index([driveFolderId])
   @@index([uploadedBy])
   @@index([deletedInDrive])
+  // Composite indexes for dashboard file queries
+  @@index([schoolId, deletedInDrive])
+  @@index([schoolId, uploadedBy, createdAt])
+  @@index([schoolId, visibility, deletedInDrive])
 }
 
 // ===========================================

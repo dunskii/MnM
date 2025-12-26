@@ -9,6 +9,7 @@ import {
   Grid,
   Card,
   CardContent,
+  CardHeader,
   Typography,
   Button,
   List,
@@ -37,16 +38,21 @@ import {
   Receipt as ReceiptIcon,
   Payment as PaymentIcon,
   Warning as WarningIcon,
+  InsertDriveFile as FileIcon,
+  CloudDownload as DownloadIcon,
 } from '@mui/icons-material';
-import { format, isSameDay, addDays, startOfWeek } from 'date-fns';
+import { format, isSameDay, addDays, startOfWeek, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
+import { StatWidget } from '../../components/dashboard/StatWidget';
+import { CharacterIllustration, getAgeGroupFromBirthDate } from '../../components/brand';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLessons } from '../../hooks/useLessons';
 import { useMyBookings } from '../../hooks/useHybridBooking';
 import { useNotesByStudent } from '../../hooks/useNotes';
 import { useResourcesByStudent } from '../../hooks/useResources';
 import { useStudents } from '../../hooks/useUsers';
+import { useParentSharedFiles, formatCurrency as formatDashboardCurrency } from '../../hooks/useDashboard';
 import { HybridBooking, formatTimeSlot, getBookingStatusColor } from '../../api/hybridBooking.api';
 import { Note } from '../../api/notes.api';
 import { Resource, formatFileSize } from '../../api/resources.api';
@@ -55,50 +61,19 @@ import { useParentInvoices } from '../../hooks/useInvoices';
 import { Invoice, InvoiceStatus } from '../../api/invoices.api';
 
 // ===========================================
-// STAT CARD COMPONENT
+// TYPES
 // ===========================================
 
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
-  loading?: boolean;
-  onClick?: () => void;
-}
-
-function StatCard({ title, value, icon, color = 'primary', loading, onClick }: StatCardProps) {
-  return (
-    <Card sx={{ cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography color="text.secondary" variant="body2" gutterBottom>
-              {title}
-            </Typography>
-            {loading ? (
-              <Skeleton variant="text" width={60} height={40} />
-            ) : (
-              <Typography variant="h4" component="div" color={`${color}.main`}>
-                {value}
-              </Typography>
-            )}
-          </Box>
-          <Box
-            sx={{
-              bgcolor: `${color}.light`,
-              borderRadius: 2,
-              p: 1.5,
-              color: `${color}.main`,
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
+// File icon helper for MIME types
+const getFileIcon = (mimeType: string) => {
+  if (mimeType.includes('image')) return '🖼️';
+  if (mimeType.includes('audio')) return '🎵';
+  if (mimeType.includes('video')) return '🎬';
+  if (mimeType.includes('pdf')) return '📄';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '📊';
+  if (mimeType.includes('document') || mimeType.includes('word')) return '📝';
+  return '📁';
+};
 
 // ===========================================
 // STUDENT SELECTOR TAB
@@ -554,6 +529,13 @@ export default function ParentDashboardPage() {
   const { data: notesData, isLoading: notesLoading } = useNotesByStudent(selectedStudentId);
   const { data: resourcesData, isLoading: resourcesLoading } = useResourcesByStudent(selectedStudentId);
   const { data: invoicesData, isLoading: invoicesLoading } = useParentInvoices();
+  const { data: sharedFiles, isLoading: filesLoading } = useParentSharedFiles(5);
+
+  // Get selected student info for character
+  const selectedStudent = myStudents.find((s) => s.id === selectedStudentId);
+  const studentAgeGroup = selectedStudent?.birthDate
+    ? getAgeGroupFromBirthDate(selectedStudent.birthDate)
+    : selectedStudent?.ageGroup || 'KIDS';
 
   // Calculate stats
   const todayDayOfWeek = new Date().getDay();
@@ -568,6 +550,16 @@ export default function ParentDashboardPage() {
       new Date(b.scheduledDate) >= new Date()
   ) || [];
   const unreadNotes = notesData?.filter((n) => !n.isPrivate) || [];
+
+  // Calculate outstanding payments
+  const unpaidInvoices = invoicesData?.filter(
+    (i) => i.status === 'SENT' || i.status === 'PARTIALLY_PAID' || i.status === 'OVERDUE'
+  ) || [];
+  const totalOutstanding = unpaidInvoices.reduce(
+    (sum, i) => sum + (parseFloat(i.total) - parseFloat(i.amountPaid)),
+    0
+  );
+  const overdueCount = invoicesData?.filter((i) => i.status === 'OVERDUE').length || 0;
 
   const isLoading = studentsLoading || lessonsLoading;
 
@@ -607,41 +599,69 @@ export default function ParentDashboardPage() {
         onSelectStudent={setSelectedStudentId}
       />
 
-      {/* Stats Row */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Today's Lessons"
+      {/* Stats Row - Using StatWidget */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Today"
             value={todayLessons.length}
             icon={<CalendarIcon />}
+            color="primary"
+            subtitle="Lessons today"
             loading={lessonsLoading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Enrolled Lessons"
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Enrolled"
             value={studentLessons.length}
             icon={<SchoolIcon />}
+            color="secondary"
+            subtitle="Active lessons"
             loading={lessonsLoading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Upcoming Bookings"
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Bookings"
             value={upcomingBookings.length}
             icon={<EventIcon />}
             color="info"
+            subtitle="Upcoming"
             loading={bookingsLoading}
-            onClick={() => navigate('/parent/hybrid-booking')}
+            href="/parent/hybrid-booking"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Teacher Notes"
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Outstanding"
+            value={formatDashboardCurrency(totalOutstanding * 100)}
+            icon={<PaymentIcon />}
+            color={overdueCount > 0 ? 'error' : totalOutstanding > 0 ? 'warning' : 'success'}
+            subtitle={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
+            loading={invoicesLoading}
+            href="/parent/invoices"
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Notes"
             value={unreadNotes.length}
             icon={<DescriptionIcon />}
             color="success"
+            subtitle="From teachers"
             loading={notesLoading}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <StatWidget
+            title="Resources"
+            value={sharedFiles?.length || 0}
+            icon={<FolderIcon />}
+            color="info"
+            subtitle="Shared files"
+            loading={filesLoading}
+            href="/parent/resources"
           />
         </Grid>
       </Grid>
@@ -737,13 +757,130 @@ export default function ParentDashboardPage() {
           </Card>
         </Grid>
 
+        {/* Student Profile Card with Character */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ textAlign: 'center', py: 3 }}>
+              {selectedStudent && (
+                <>
+                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+                    <CharacterIllustration
+                      ageGroup={studentAgeGroup}
+                      size="large"
+                      withName
+                      withLabel
+                      showTooltip={false}
+                    />
+                  </Box>
+                  <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    {selectedStudent.firstName} {selectedStudent.lastName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {studentLessons.length} enrolled lesson{studentLessons.length !== 1 ? 's' : ''}
+                  </Typography>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Shared Files from Drive */}
+        <Grid item xs={12} md={8}>
+          <Card sx={{ height: '100%' }}>
+            <CardHeader
+              title={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <DownloadIcon color="primary" />
+                  <Typography variant="h6">Shared Files</Typography>
+                </Box>
+              }
+              action={
+                <Button
+                  size="small"
+                  onClick={() => navigate('/parent/resources')}
+                >
+                  View All
+                </Button>
+              }
+              sx={{ pb: 0 }}
+            />
+            <Divider sx={{ mx: 2, mt: 2 }} />
+            <CardContent>
+              {filesLoading ? (
+                <Box>
+                  {[1, 2, 3].map((i) => (
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="40%" />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : sharedFiles && sharedFiles.length > 0 ? (
+                <List disablePadding>
+                  {sharedFiles.map((file) => (
+                    <ListItem key={file.id} sx={{ px: 0, py: 1 }}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#a3d9f6',
+                            color: '#4580E4',
+                            width: 40,
+                            height: 40,
+                            fontSize: '1.2rem',
+                          }}
+                        >
+                          {getFileIcon(file.mimeType)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            variant="body2"
+                            fontWeight={500}
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {file.fileName}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {file.lessonName || file.studentName || 'General'} •{' '}
+                            {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true })}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ py: 3, textAlign: 'center' }}>
+                  <FileIcon sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5 }} />
+                  <Typography color="text.secondary" sx={{ mt: 1 }}>
+                    No shared files yet
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Files shared by teachers will appear here
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
         {/* Resources */}
         <Grid item xs={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 <FolderIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Shared Resources
+                Lesson Resources
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <RecentResources

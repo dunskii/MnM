@@ -22,6 +22,7 @@ import resourcesRoutes from './resources.routes';
 import invoicesRoutes from './invoices.routes';
 import googleDriveRoutes from './googleDrive.routes';
 import notificationsRoutes from './notifications.routes';
+import dashboardRoutes from './dashboard.routes';
 
 const router = Router();
 
@@ -61,5 +62,6 @@ router.use('/resources', csrfProtection, resourcesRoutes);
 router.use('/invoices', csrfProtection, invoicesRoutes);
 router.use('/google-drive', csrfProtection, googleDriveRoutes);
 router.use('/notifications', csrfProtection, notificationsRoutes);
+router.use('/dashboard', csrfProtection, dashboardRoutes);
 
 export default router;

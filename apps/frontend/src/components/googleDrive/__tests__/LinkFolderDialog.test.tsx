@@ -69,7 +69,6 @@ vi.mock('../../../api/resources.api', () => ({
 
 describe('LinkFolderDialog', () => {
   const mockOnClose = vi.fn();
-  const mockOnSuccess = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();

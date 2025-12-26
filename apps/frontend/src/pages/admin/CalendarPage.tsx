@@ -67,8 +67,9 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-// Create drag-and-drop wrapped calendar
-const DragAndDropCalendar = withDragAndDrop(Calendar);
+// Create drag-and-drop wrapped calendar with CalendarEvent type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DragAndDropCalendar = withDragAndDrop<CalendarEvent>(Calendar as any);
 
 // Event type labels for display
 const eventTypeLabels: Record<string, string> = {

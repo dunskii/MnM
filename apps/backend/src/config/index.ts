@@ -45,6 +45,7 @@ function validateRequiredEnvVars(): void {
   const required: { name: string; productionOnly: boolean }[] = [
     { name: 'DATABASE_URL', productionOnly: false },
     { name: 'JWT_SECRET', productionOnly: true },
+    { name: 'ENCRYPTION_KEY', productionOnly: true },
   ];
 
   const missing: string[] = [];

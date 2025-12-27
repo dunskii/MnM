@@ -17,6 +17,7 @@ export interface JWTPayload {
 
 export interface AccessTokenPayload extends JWTPayload {
   type: 'access';
+  jti: string; // JWT ID for revocation tracking
 }
 
 export interface RefreshTokenPayload {

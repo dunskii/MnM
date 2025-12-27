@@ -1,0 +1,137 @@
+config:
+  target: 'http://localhost:5000'
+  phases:
+    - duration: 60
+      arrivalRate: 15
+      name: "Calendar baseline"
+    - duration: 120
+      arrivalRate: 40
+      name: "Calendar peak (500+ events)"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  ensure:
+    maxErrorRate: 1
+    p95: 1200  # Calendar can be slower with 500+ events
+    p99: 2500
+
+scenarios:
+  - name: "Calendar Full Month Load"
+    weight: 50
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Load full calendar for current month (500+ events)
+      - get:
+          url: "/api/v1/lessons/calendar?startDate=2025-01-01&endDate=2025-01-31"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+      # Wait before next request
+      - think: 2
+
+      # Load next month
+      - get:
+          url: "/api/v1/lessons/calendar?startDate=2025-02-01&endDate=2025-02-28"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Calendar Week View"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "teacher@test.com"
+            password: "Teacher123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Load current week
+      - get:
+          url: "/api/v1/lessons/calendar?view=week"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Simulate scrolling through weeks
+      - think: 1
+
+      - get:
+          url: "/api/v1/lessons/calendar?view=week&offset=1"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: "/api/v1/lessons/calendar?view=week&offset=2"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Calendar Drag-and-Drop Reschedule"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Get lessons to reschedule
+      - get:
+          url: "/api/v1/lessons?limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.lessons[0].id"
+              as: "lessonId"
+          expect:
+            - statusCode: 200
+
+      # Simulate drag-and-drop reschedule
+      - patch:
+          url: "/api/v1/lessons/{{ lessonId }}/reschedule"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            newStartTime: "2025-01-15T10:00:00Z"
+            newEndTime: "2025-01-15T11:00:00Z"
+            reason: "Load test reschedule"
+          expect:
+            - statusCode: [200, 400]  # May fail if slot conflicts
+
+      # Refresh calendar after reschedule
+      - get:
+          url: "/api/v1/lessons/calendar?startDate=2025-01-01&endDate=2025-01-31"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200

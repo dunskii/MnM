@@ -1,0 +1,176 @@
+config:
+  target: 'http://localhost:5000'
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Hybrid booking warmup"
+    - duration: 90
+      arrivalRate: 20
+      name: "Concurrent booking rush"
+    - duration: 60
+      arrivalRate: 30
+      name: "Peak concurrent booking (race conditions)"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  ensure:
+    maxErrorRate: 5  # Allow up to 5% failures due to race conditions
+    p95: 1000
+    p99: 2000
+
+scenarios:
+  - name: "Parent Hybrid Slot Booking (Concurrent)"
+    weight: 60
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "parent@test.com"
+            password: "Parent123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+            - json: "$.user.id"
+              as: "userId"
+          expect:
+            - statusCode: 200
+
+      # Get available hybrid slots
+      - get:
+          url: "/api/v1/hybrid-lessons/available-slots?week=2025-W03"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.slots[0].id"
+              as: "slotId"
+            - json: "$.slots[0].lessonId"
+              as: "lessonId"
+          expect:
+            - statusCode: 200
+
+      # Think time before booking (realistic user behavior)
+      - think: 2
+
+      # Attempt to book slot (may fail due to race condition)
+      - post:
+          url: "/api/v1/hybrid-lessons/book"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            slotId: "{{ slotId }}"
+            studentId: "{{ $randomId }}"
+            notes: "Load test booking"
+          expect:
+            - statusCode: [200, 409]  # 200 = success, 409 = already booked
+
+      # Check bookings after attempt
+      - get:
+          url: "/api/v1/hybrid-lessons/my-bookings"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Hybrid Slot Cancellation and Rebooking"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "parent@test.com"
+            password: "Parent123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Get my bookings
+      - get:
+          url: "/api/v1/hybrid-lessons/my-bookings"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.bookings[0].id"
+              as: "bookingId"
+          expect:
+            - statusCode: 200
+
+      # Cancel booking (24h notice rule)
+      - delete:
+          url: "/api/v1/hybrid-lessons/bookings/{{ bookingId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: [200, 400]  # May fail if outside 24h window
+
+      # Wait before rebooking
+      - think: 1
+
+      # Get available slots again
+      - get:
+          url: "/api/v1/hybrid-lessons/available-slots?week=2025-W04"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.slots[0].id"
+              as: "newSlotId"
+          expect:
+            - statusCode: 200
+
+      # Rebook different slot
+      - post:
+          url: "/api/v1/hybrid-lessons/book"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            slotId: "{{ newSlotId }}"
+            studentId: "{{ $randomId }}"
+          expect:
+            - statusCode: [200, 409]
+
+  - name: "Admin Hybrid Schedule Management"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # View all hybrid bookings
+      - get:
+          url: "/api/v1/hybrid-lessons/all-bookings?startDate=2025-01-01&endDate=2025-03-31"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Get booking statistics
+      - get:
+          url: "/api/v1/hybrid-lessons/statistics"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # View slot availability report
+      - get:
+          url: "/api/v1/hybrid-lessons/availability-report?term=2025-T1"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Check race condition logs
+      - get:
+          url: "/api/v1/hybrid-lessons/conflict-log?limit=20"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200

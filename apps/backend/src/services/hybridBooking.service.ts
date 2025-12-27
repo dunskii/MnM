@@ -462,7 +462,7 @@ export async function createHybridBooking(
 
   // Queue booking confirmation email notification
   try {
-    const { queueIndividualSessionBookedEmail } = await import('../jobs/emailNotification.job');
+    const { queueIndividualSessionBookedEmail } = await import('../jobs/emailNotification.job.js');
     await queueIndividualSessionBookedEmail(schoolId, booking.id);
   } catch (error) {
     console.error('[HybridBookingService] Failed to queue booking email:', error);
@@ -562,7 +562,7 @@ export async function rescheduleHybridBooking(
 
   // Queue reschedule notification email
   try {
-    const { queueIndividualSessionRescheduledEmail } = await import('../jobs/emailNotification.job');
+    const { queueIndividualSessionRescheduledEmail } = await import('../jobs/emailNotification.job.js');
     const oldDate = new Intl.DateTimeFormat('en-AU', {
       weekday: 'long',
       year: 'numeric',
@@ -824,7 +824,7 @@ export async function toggleBookingsOpen(
   // If opening bookings, queue notification emails to all enrolled parents
   if (open) {
     try {
-      const { queueHybridBookingOpenedEmails } = await import('../jobs/emailNotification.job');
+      const { queueHybridBookingOpenedEmails } = await import('../jobs/emailNotification.job.js');
       await queueHybridBookingOpenedEmails(schoolId, lessonId);
     } catch (error) {
       console.error('[HybridBookingService] Failed to queue booking opened emails:', error);

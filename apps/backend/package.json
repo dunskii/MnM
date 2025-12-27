@@ -19,7 +19,12 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "load-test": "artillery run tests/load/artillery.yml",
+    "load-test:dashboard": "artillery run tests/load/scenarios/dashboard.yml",
+    "load-test:calendar": "artillery run tests/load/scenarios/calendar.yml",
+    "load-test:hybrid": "artillery run tests/load/scenarios/hybrid-booking.yml",
+    "load-test:report": "artillery run tests/load/artillery.yml -o tests/load/report.json && artillery report tests/load/report.json"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -43,6 +48,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.3.0",
     "@types/bcrypt": "^5.0.2",
     "@types/bull": "^4.10.4",
     "@types/cookie-parser": "^1.4.10",
@@ -57,6 +63,7 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
+    "artillery": "^2.0.20",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "prisma": "^5.22.0",

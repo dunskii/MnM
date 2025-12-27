@@ -55,11 +55,34 @@ export function verifyTokenHash(token: string, hash: string): boolean {
 // ===========================================
 
 /**
- * Derive encryption key from environment variable or JWT secret
+ * Derive encryption key from environment variable
  * Uses SHA-256 to ensure consistent 32-byte key length
+ * SECURITY: ENCRYPTION_KEY must be separate from JWT_SECRET
  */
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY || config.jwt.secret;
+  const key = process.env.ENCRYPTION_KEY;
+
+  if (!key) {
+    if (config.env === 'production') {
+      throw new Error(
+        'CRITICAL: ENCRYPTION_KEY must be set in production. ' +
+        'Generate with: openssl rand -hex 32'
+      );
+    }
+    // Development: still require it but give clearer error
+    throw new Error(
+      'ENCRYPTION_KEY environment variable is required. ' +
+      'Generate with: openssl rand -hex 32'
+    );
+  }
+
+  if (key.length < 32) {
+    throw new Error(
+      'ENCRYPTION_KEY must be at least 32 characters. ' +
+      'Generate with: openssl rand -hex 32'
+    );
+  }
+
   return crypto.createHash('sha256').update(key).digest();
 }
 

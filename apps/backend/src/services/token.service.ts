@@ -140,13 +140,16 @@ export async function getActiveSessionCount(userId: string): Promise<number> {
 
 /**
  * Get all active sessions for a user
+ * SECURITY: Filters by schoolId to prevent cross-school session enumeration
  */
 export async function getActiveSessions(
-  userId: string
+  userId: string,
+  schoolId: string
 ): Promise<{ id: string; createdAt: Date; expiresAt: Date }[]> {
   return prisma.refreshToken.findMany({
     where: {
       userId,
+      user: { schoolId }, // CRITICAL: Multi-tenancy filter
       expiresAt: { gte: new Date() },
     },
     select: {
@@ -160,32 +163,80 @@ export async function getActiveSessions(
 
 /**
  * Revoke a specific session
+ * SECURITY: Filters by schoolId to prevent cross-school session revocation
  */
 export async function revokeSession(
   userId: string,
+  schoolId: string,
   tokenId: string
 ): Promise<void> {
-  await prisma.refreshToken.deleteMany({
+  const result = await prisma.refreshToken.deleteMany({
     where: {
       id: tokenId,
       userId,
+      user: { schoolId }, // CRITICAL: Multi-tenancy filter
     },
   });
+
+  if (result.count === 0) {
+    console.warn(
+      `[Token Service] Session revocation failed - no matching session. ` +
+      `userId=${userId}, schoolId=${schoolId}, tokenId=${tokenId}`
+    );
+  }
 }
 
 /**
  * Revoke all sessions except current
+ * SECURITY: Filters by schoolId to prevent cross-school session revocation
  */
 export async function revokeOtherSessions(
   userId: string,
+  schoolId: string,
   currentTokenId: string
 ): Promise<number> {
   const result = await prisma.refreshToken.deleteMany({
     where: {
       userId,
+      user: { schoolId }, // CRITICAL: Multi-tenancy filter
       id: { not: currentTokenId },
     },
   });
 
+  return result.count;
+}
+
+// ===========================================
+// ACCESS TOKEN REVOCATION
+// ===========================================
+
+/**
+ * Revoke an access token by adding its JTI to the blacklist
+ * SECURITY: Token will be rejected in authenticate middleware
+ */
+export async function revokeAccessToken(
+  jti: string,
+  userId: string,
+  schoolId: string,
+  expiresAt: Date
+): Promise<void> {
+  await prisma.revokedToken.create({
+    data: {
+      jti,
+      userId,
+      schoolId,
+      expiresAt,
+    },
+  });
+}
+
+/**
+ * Clean up expired revoked tokens
+ * Should be run periodically to prevent table bloat
+ */
+export async function cleanupExpiredRevokedTokens(): Promise<number> {
+  const result = await prisma.revokedToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
   return result.count;
 }

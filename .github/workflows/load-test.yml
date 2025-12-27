@@ -1,0 +1,221 @@
+name: Load Testing
+
+on:
+  # Run on schedule (daily at 2 AM Sydney time = 4 PM UTC)
+  schedule:
+    - cron: '0 16 * * *'
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target URL for load testing'
+        required: false
+        default: 'http://localhost:5000'
+      scenario:
+        description: 'Test scenario to run'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - dashboard
+          - calendar
+          - hybrid
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: musicnme_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: apps/backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: apps/backend
+        run: npx prisma generate
+
+      - name: Run database migrations
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/musicnme_test
+        run: npx prisma migrate deploy
+
+      - name: Seed test database
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/musicnme_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-for-load-testing
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-load-testing
+        run: npm run db:seed
+
+      - name: Build backend
+        working-directory: apps/backend
+        run: npm run build
+
+      - name: Start backend server
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/musicnme_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          PORT: 5000
+          JWT_SECRET: test-jwt-secret-for-load-testing
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-load-testing
+          ENCRYPTION_KEY: test-encryption-key-for-load-testing
+        run: |
+          node dist/index.js &
+          echo $! > backend.pid
+          # Wait for server to start
+          sleep 10
+
+      - name: Verify server is running
+        run: |
+          curl -f http://localhost:5000/health || exit 1
+
+      - name: Run full load test
+        if: ${{ github.event.inputs.scenario == 'full' || github.event.inputs.scenario == '' }}
+        working-directory: apps/backend
+        run: npm run load-test:report
+        continue-on-error: true
+
+      - name: Run dashboard load test
+        if: ${{ github.event.inputs.scenario == 'dashboard' }}
+        working-directory: apps/backend
+        run: artillery run tests/load/scenarios/dashboard.yml -o tests/load/report.json
+        continue-on-error: true
+
+      - name: Run calendar load test
+        if: ${{ github.event.inputs.scenario == 'calendar' }}
+        working-directory: apps/backend
+        run: artillery run tests/load/scenarios/calendar.yml -o tests/load/report.json
+        continue-on-error: true
+
+      - name: Run hybrid booking load test
+        if: ${{ github.event.inputs.scenario == 'hybrid' }}
+        working-directory: apps/backend
+        run: artillery run tests/load/scenarios/hybrid-booking.yml -o tests/load/report.json
+        continue-on-error: true
+
+      - name: Generate HTML report
+        if: always()
+        working-directory: apps/backend
+        run: |
+          if [ -f tests/load/report.json ]; then
+            npx artillery report tests/load/report.json --output tests/load/report.html
+          fi
+
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-report-${{ github.run_number }}
+          path: |
+            apps/backend/tests/load/report.json
+            apps/backend/tests/load/report.html
+          retention-days: 30
+
+      - name: Check performance thresholds
+        if: always()
+        working-directory: apps/backend
+        run: |
+          if [ -f tests/load/report.json ]; then
+            # Parse JSON and check thresholds
+            ERROR_RATE=$(jq -r '.aggregate.counters["http.codes.400"] + .aggregate.counters["http.codes.500"] / .aggregate.counters["http.requests"] * 100' tests/load/report.json)
+            P95=$(jq -r '.aggregate.latency.p95' tests/load/report.json)
+
+            echo "Error Rate: $ERROR_RATE%"
+            echo "P95 Latency: ${P95}ms"
+
+            # Fail if thresholds exceeded
+            if (( $(echo "$ERROR_RATE > 1" | bc -l) )); then
+              echo "❌ Error rate exceeded 1%"
+              exit 1
+            fi
+
+            if (( $(echo "$P95 > 1000" | bc -l) )); then
+              echo "⚠️ P95 latency exceeded 1000ms"
+              # Don't fail, just warn
+            fi
+
+            echo "✅ Performance thresholds met"
+          fi
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f apps/backend/backend.pid ]; then
+            kill $(cat apps/backend/backend.pid) || true
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'apps/backend/tests/load/report.json';
+
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+
+              const comment = `## Load Test Results
+
+              **Performance Metrics:**
+              - Total Requests: ${report.aggregate.counters['http.requests']}
+              - Error Rate: ${((report.aggregate.counters['http.codes.400'] || 0) + (report.aggregate.counters['http.codes.500'] || 0)) / report.aggregate.counters['http.requests'] * 100}%
+              - Mean Response Time: ${report.aggregate.latency.mean}ms
+              - P95 Response Time: ${report.aggregate.latency.p95}ms
+              - P99 Response Time: ${report.aggregate.latency.p99}ms
+
+              **Status:**
+              ${report.aggregate.latency.p95 < 1000 ? '✅' : '⚠️'} P95 latency ${report.aggregate.latency.p95 < 1000 ? 'within' : 'exceeds'} threshold (1000ms)
+
+              [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              `;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }

@@ -40,6 +40,17 @@ export const authenticate = async (
       throw new AppError('Invalid authentication token.', 401);
     }
 
+    // SECURITY: Check if token has been revoked
+    if (payload.jti) {
+      const isRevoked = await prisma.revokedToken.findUnique({
+        where: { jti: payload.jti },
+      });
+
+      if (isRevoked) {
+        throw new AppError('Session has been revoked. Please log in again.', 401);
+      }
+    }
+
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },

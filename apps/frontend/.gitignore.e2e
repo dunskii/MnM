@@ -1,0 +1,19 @@
+# Playwright E2E Test Artifacts
+# Add these lines to your main .gitignore
+
+# Test results
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Videos and screenshots
+**/test-results/*
+**/*.webm
+**/*.mp4
+
+# Trace files
+trace.zip
+*.trace
+
+# Playwright state
+.auth/

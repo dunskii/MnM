@@ -185,7 +185,10 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const sessions = await tokenService.getActiveSessions(req.user!.userId);
+      const sessions = await tokenService.getActiveSessions(
+        req.user!.userId,
+        req.user!.schoolId // SECURITY: Multi-tenancy filter
+      );
 
       res.json({
         status: 'success',
@@ -208,6 +211,7 @@ router.delete(
     try {
       await tokenService.revokeSession(
         req.user!.userId,
+        req.user!.schoolId, // SECURITY: Multi-tenancy filter
         req.params.sessionId
       );
 

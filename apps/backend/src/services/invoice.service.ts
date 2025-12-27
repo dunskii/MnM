@@ -315,7 +315,7 @@ export async function createInvoice(
 
   // Queue invoice created email notification
   try {
-    const { queueInvoiceCreatedEmail } = await import('../jobs/emailNotification.job');
+    const { queueInvoiceCreatedEmail } = await import('../jobs/emailNotification.job.js');
     await queueInvoiceCreatedEmail(schoolId, invoice.id);
   } catch (error) {
     console.error('[InvoiceService] Failed to queue invoice email:', error);
@@ -630,7 +630,7 @@ export async function recordManualPayment(
 
   // Queue payment received email notification
   try {
-    const { queuePaymentReceivedEmail } = await import('../jobs/emailNotification.job');
+    const { queuePaymentReceivedEmail } = await import('../jobs/emailNotification.job.js');
     await queuePaymentReceivedEmail(schoolId, payment.id);
   } catch (error) {
     console.error('[InvoiceService] Failed to queue payment receipt email:', error);
@@ -653,22 +653,38 @@ export async function recordManualPayment(
 // RECORD STRIPE PAYMENT (Called by webhook)
 // ===========================================
 
+/**
+ * Record a Stripe payment for an invoice
+ * SECURITY: Requires schoolId to prevent cross-school payment fraud
+ */
 export async function recordStripePayment(
+  schoolId: string,
   invoiceId: string,
   amount: number,
   stripePaymentId: string
 ): Promise<Payment> {
-  const existing = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
+  // SECURITY: Validate invoice belongs to the school
+  const existing = await prisma.invoice.findFirst({
+    where: {
+      id: invoiceId,
+      schoolId, // CRITICAL: Multi-tenancy filter
+    },
   });
 
   if (!existing) {
+    console.error(
+      `[Invoice Service] SECURITY: Invoice not found or school mismatch. ` +
+      `invoiceId=${invoiceId}, schoolId=${schoolId}`
+    );
     throw new AppError('Invoice not found', 404);
   }
 
-  // Check if this payment was already recorded (idempotency)
+  // Check if this payment was already recorded (idempotency) - with schoolId
   const existingPayment = await prisma.payment.findFirst({
-    where: { stripePaymentId },
+    where: {
+      stripePaymentId,
+      invoice: { schoolId }, // SECURITY: Multi-tenancy filter
+    },
   });
 
   if (existingPayment) {
@@ -999,20 +1015,81 @@ export async function generateBulkTermInvoices(
 // UPDATE OVERDUE INVOICES (CRON JOB)
 // ===========================================
 
-export async function updateOverdueInvoices(): Promise<number> {
+/**
+ * Update overdue invoices for a specific school
+ * SECURITY: Multi-tenancy compliant - processes one school at a time
+ */
+export async function updateOverdueInvoicesForSchool(
+  schoolId: string
+): Promise<{ count: number; invoiceIds: string[] }> {
   const now = new Date();
 
-  const result = await prisma.invoice.updateMany({
+  // First find the invoices to update (for logging)
+  const overdueInvoices = await prisma.invoice.findMany({
     where: {
+      schoolId, // CRITICAL: Multi-tenancy filter
       status: 'SENT',
       dueDate: { lt: now },
     },
-    data: {
-      status: 'OVERDUE',
-    },
+    select: { id: true, invoiceNumber: true },
   });
 
-  return result.count;
+  if (overdueInvoices.length === 0) {
+    return { count: 0, invoiceIds: [] };
+  }
+
+  const invoiceIds = overdueInvoices.map(inv => inv.id);
+
+  // Update with defense in depth (double schoolId check)
+  const result = await prisma.invoice.updateMany({
+    where: {
+      id: { in: invoiceIds },
+      schoolId, // Defense in depth
+    },
+    data: { status: 'OVERDUE' },
+  });
+
+  console.log(
+    `[Invoice Service] Marked ${result.count} invoices as OVERDUE for school ${schoolId}`
+  );
+
+  return { count: result.count, invoiceIds };
+}
+
+/**
+ * Update overdue invoices for all active schools
+ * SECURITY: Processes each school independently for proper isolation
+ */
+export async function updateAllOverdueInvoices(): Promise<{
+  totalCount: number;
+  bySchool: Record<string, number>;
+}> {
+  const schools = await prisma.school.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+  });
+
+  const bySchool: Record<string, number> = {};
+  let totalCount = 0;
+
+  for (const school of schools) {
+    try {
+      const result = await updateOverdueInvoicesForSchool(school.id);
+      bySchool[school.name] = result.count;
+      totalCount += result.count;
+    } catch (error) {
+      console.error(`[Invoice Service] Failed to update overdue for school ${school.name}:`, error);
+    }
+  }
+
+  return { totalCount, bySchool };
+}
+
+/** @deprecated Use updateAllOverdueInvoices() instead */
+export async function updateOverdueInvoices(): Promise<number> {
+  console.warn('[Invoice Service] DEPRECATED: Use updateAllOverdueInvoices() instead');
+  const result = await updateAllOverdueInvoices();
+  return result.totalCount;
 }
 
 // ===========================================

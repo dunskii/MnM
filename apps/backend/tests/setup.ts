@@ -35,7 +35,7 @@ jest.mock('../src/config/queue', () => ({
 }));
 
 // Mock email notification job to avoid queue issues
-jest.mock('../src/jobs/emailNotification.job', () => ({
+const emailJobMock = {
   queueLessonRescheduledEmail: jest.fn().mockResolvedValue('mock-job-id'),
   queueHybridBookingOpenedEmail: jest.fn().mockResolvedValue('mock-job-id'),
   queueHybridBookingReminderEmail: jest.fn().mockResolvedValue('mock-job-id'),
@@ -46,7 +46,8 @@ jest.mock('../src/jobs/emailNotification.job', () => ({
   queueMeetGreetReminderEmail: jest.fn().mockResolvedValue('mock-job-id'),
   queueLessonReminderEmail: jest.fn().mockResolvedValue('mock-job-id'),
   registerEmailJobProcessor: jest.fn(),
-}));
+};
+jest.mock('../src/jobs/emailNotification.job', () => emailJobMock);
 
 // Mock console.warn to reduce noise in tests
 const originalWarn = console.warn;

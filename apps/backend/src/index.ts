@@ -12,6 +12,9 @@ import routes from './routes';
 import { scheduleRecurringSync } from './jobs/googleDriveSync.job';
 import { closeQueues, isQueueHealthy, getQueueStats, getEmailQueueStats } from './config/queue';
 import { startCacheCleanup, stopCacheCleanup } from './utils/driveRateLimiter';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Import job processors to register them with Bull queues
 import './jobs/emailNotification.job';
@@ -62,15 +65,33 @@ app.get('/api/csrf-token', getCsrfToken);
 // ===========================================
 
 app.get('/health', async (_req: Request, res: Response) => {
+  // Check database connection
+  let dbHealthy = false;
+  let dbStatus = 'disconnected';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbHealthy = true;
+    dbStatus = 'connected';
+  } catch (error) {
+    console.error('[Health Check] Database connection failed:', error);
+  }
+
+  // Check queue connection
   const queueHealthy = await isQueueHealthy().catch(() => false);
   const driveQueueStats = queueHealthy ? await getQueueStats().catch(() => null) : null;
   const emailQueueStats = queueHealthy ? await getEmailQueueStats().catch(() => null) : null;
 
-  res.status(200).json({
-    status: 'healthy',
+  // Determine overall health (return 503 if critical services are down)
+  const isHealthy = dbHealthy && queueHealthy;
+  const statusCode = isHealthy ? 200 : 503;
+
+  res.status(statusCode).json({
+    status: isHealthy ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
     services: {
+      database: dbStatus,
       queue: queueHealthy ? 'connected' : 'disconnected',
       driveSync: driveQueueStats || undefined,
       emailNotifications: emailQueueStats || undefined,
@@ -151,6 +172,14 @@ async function gracefulShutdown(signal: string): Promise<void> {
     await closeQueues();
   } catch (err) {
     console.error('[Server] Error closing queues:', err);
+  }
+
+  // Close database connection
+  try {
+    await prisma.$disconnect();
+    console.log('[Server] Database connection closed');
+  } catch (err) {
+    console.error('[Server] Error closing database:', err);
   }
 
   console.log('[Server] Shutdown complete');

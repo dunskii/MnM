@@ -3,6 +3,7 @@
 // ===========================================
 
 import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import {
   AccessTokenPayload,
@@ -17,11 +18,15 @@ import {
 
 /**
  * Generate an access token for authenticated user
+ * SECURITY: Includes JTI for revocation tracking
  */
 export function signAccessToken(payload: JWTPayload): string {
+  const jti = uuidv4(); // JWT ID for revocation tracking
+
   const tokenPayload: AccessTokenPayload = {
     ...payload,
     type: 'access',
+    jti,
   };
 
   // Convert expiry string to seconds

@@ -441,14 +441,20 @@ async function handleInvoicePaymentComplete(
     return;
   }
 
-  // Get invoice to update
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
+  // SECURITY: Get invoice with schoolId validation to prevent cross-school payment fraud
+  const invoice = await prisma.invoice.findFirst({
+    where: {
+      id: invoiceId,
+      schoolId, // CRITICAL: Multi-tenancy validation
+    },
     select: { id: true, total: true, amountPaid: true },
   });
 
   if (!invoice) {
-    console.error('[Stripe Webhook] Invoice not found:', invoiceId);
+    console.error(
+      `[Stripe Webhook] SECURITY: Invoice not found or school mismatch. ` +
+      `invoiceId=${invoiceId}, schoolId=${schoolId}`
+    );
     return;
   }
 
@@ -501,9 +507,26 @@ async function handleCheckoutComplete(
     return;
   }
 
-  // Check if already processed by payment intent
+  // SECURITY: Validate meet & greet belongs to the school from metadata
+  const meetAndGreet = await prisma.meetAndGreet.findFirst({
+    where: {
+      id: meetAndGreetId,
+      schoolId, // CRITICAL: Multi-tenancy validation
+    },
+  });
+
+  if (!meetAndGreet) {
+    console.error(
+      `[Stripe Webhook] SECURITY: Meet & greet not found or school mismatch. ` +
+      `meetAndGreetId=${meetAndGreetId}, schoolId=${schoolId}`
+    );
+    return;
+  }
+
+  // Check if already processed by payment intent (with schoolId filter)
   const existingCompleted = await prisma.registrationPayment.findFirst({
     where: {
+      schoolId, // SECURITY: Multi-tenancy filter
       stripePaymentIntentId: session.payment_intent as string,
       status: 'COMPLETED',
     },
@@ -514,9 +537,12 @@ async function handleCheckoutComplete(
     return;
   }
 
-  // Try to find and update existing pending payment record
+  // Try to find and update existing pending payment record (with schoolId filter)
   const existingPending = await prisma.registrationPayment.findFirst({
-    where: { stripeSessionId: session.id },
+    where: {
+      schoolId, // SECURITY: Multi-tenancy filter
+      stripeSessionId: session.id,
+    },
   });
 
   if (existingPending) {
@@ -558,9 +584,12 @@ async function handleCheckoutComplete(
     console.log('[Stripe Webhook] Created new payment record:', session.id);
   }
 
-  // Update meet & greet stripeSessionId for tracking
-  await prisma.meetAndGreet.update({
-    where: { id: meetAndGreetId },
+  // Update meet & greet stripeSessionId for tracking (defense in depth with schoolId)
+  await prisma.meetAndGreet.updateMany({
+    where: {
+      id: meetAndGreetId,
+      schoolId, // SECURITY: Defense in depth
+    },
     data: { stripeSessionId: session.id },
   });
 

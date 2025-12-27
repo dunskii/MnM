@@ -1,0 +1,172 @@
+config:
+  target: 'http://localhost:5000'
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: "Dashboard baseline load"
+    - duration: 120
+      arrivalRate: 50
+      name: "Dashboard peak load"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  ensure:
+    maxErrorRate: 1
+    p95: 800
+    p99: 1500
+
+scenarios:
+  - name: "Admin Dashboard Heavy Load"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Dashboard overview
+      - get:
+          url: "/api/v1/dashboard/admin"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+      # Recent activity
+      - get:
+          url: "/api/v1/activity/recent?limit=20"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Upcoming lessons
+      - get:
+          url: "/api/v1/lessons/upcoming?limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Financial summary
+      - get:
+          url: "/api/v1/invoices/summary"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Student statistics
+      - get:
+          url: "/api/v1/students/statistics"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Teacher Dashboard Load"
+    weight: 35
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "teacher@test.com"
+            password: "Teacher123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Teacher dashboard
+      - get:
+          url: "/api/v1/dashboard/teacher"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Today's lessons
+      - get:
+          url: "/api/v1/lessons/today"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # My students
+      - get:
+          url: "/api/v1/students/my-students"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Pending notes
+      - get:
+          url: "/api/v1/notes/pending"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Parent Dashboard Load"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "parent@test.com"
+            password: "Parent123!"
+          capture:
+            - json: "$.accessToken"
+              as: "token"
+          expect:
+            - statusCode: 200
+
+      # Parent dashboard
+      - get:
+          url: "/api/v1/dashboard/parent"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Family schedule
+      - get:
+          url: "/api/v1/lessons/family-schedule"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Outstanding invoices
+      - get:
+          url: "/api/v1/invoices?status=PENDING"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Recent payments
+      - get:
+          url: "/api/v1/payments?limit=5"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Children progress
+      - get:
+          url: "/api/v1/students/progress"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200

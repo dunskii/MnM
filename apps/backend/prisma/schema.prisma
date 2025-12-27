@@ -227,6 +227,21 @@ model RefreshToken {
   @@index([expiresAt])
 }
 
+// SECURITY: Token blacklist for access token revocation
+// Stores JTIs of revoked access tokens until they expire
+model RevokedToken {
+  id        String   @id @default(uuid())
+  jti       String   @unique // JWT ID claim
+  userId    String
+  schoolId  String
+  revokedAt DateTime @default(now())
+  expiresAt DateTime // When the original token expires
+
+  @@index([jti])
+  @@index([expiresAt])
+  @@index([userId])
+}
+
 model LoginAttempt {
   id        String   @id @default(uuid())
   userId    String?

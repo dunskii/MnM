@@ -1,0 +1,224 @@
+# DigitalOcean App Platform specification for Music 'n Me
+# Deploy with: doctl apps create --spec deploy/digitalocean/app.yaml
+
+name: music-n-me
+region: syd  # Sydney region for Australian market
+
+# Alerts for monitoring
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+  - rule: CPU_UTILIZATION
+    value: 80
+  - rule: MEM_UTILIZATION
+    value: 80
+
+services:
+  # Backend API Service
+  - name: api
+    github:
+      repo: your-org/music-n-me
+      branch: main
+      deploy_on_push: true
+    source_dir: /apps/backend
+    dockerfile_path: /deploy/docker/Dockerfile.backend
+
+    build_command: |
+      npm ci
+      npx prisma generate
+      npm run build
+
+    run_command: |
+      npx prisma migrate deploy
+      node dist/index.js
+
+    environment_slug: node-js
+    instance_count: 2  # For high availability
+    instance_size_slug: professional-xs  # 1 vCPU, 2GB RAM
+
+    http_port: 5000
+
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    # Environment variables (sensitive values via DigitalOcean dashboard)
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: API_PREFIX
+        value: /api/v1
+
+      # Database (auto-injected from managed database)
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_AND_BUILD_TIME
+
+      # Redis (auto-injected from managed Redis)
+      - key: REDIS_URL
+        type: SECRET
+        scope: RUN_AND_BUILD_TIME
+
+      # JWT Secrets (set via dashboard)
+      - key: JWT_SECRET
+        type: SECRET
+        scope: RUN_TIME
+      - key: JWT_REFRESH_SECRET
+        type: SECRET
+        scope: RUN_TIME
+
+      # Encryption (set via dashboard)
+      - key: ENCRYPTION_KEY
+        type: SECRET
+        scope: RUN_TIME
+
+      # Stripe (set via dashboard)
+      - key: STRIPE_SECRET_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: STRIPE_WEBHOOK_SECRET
+        type: SECRET
+        scope: RUN_TIME
+
+      # SendGrid (set via dashboard)
+      - key: SENDGRID_API_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: SENDGRID_FROM_EMAIL
+        value: noreply@musicnme.com.au
+
+      # Google OAuth & Drive (set via dashboard)
+      - key: GOOGLE_CLIENT_ID
+        type: SECRET
+        scope: RUN_TIME
+      - key: GOOGLE_CLIENT_SECRET
+        type: SECRET
+        scope: RUN_TIME
+      - key: GOOGLE_REDIRECT_URI
+        value: https://musicnme.com.au/api/v1/auth/google/callback
+
+      # Frontend URL
+      - key: FRONTEND_URL
+        value: https://musicnme.com.au
+
+    routes:
+      - path: /api
+      - path: /health
+
+    cors:
+      allow_origins:
+        - exact: https://musicnme.com.au
+      allow_methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allow_headers:
+        - Content-Type
+        - Authorization
+        - x-csrf-token
+      allow_credentials: true
+
+  # Frontend Static Site
+  - name: web
+    github:
+      repo: your-org/music-n-me
+      branch: main
+      deploy_on_push: true
+    source_dir: /apps/frontend
+
+    build_command: npm run build
+    output_dir: /dist
+
+    environment_slug: node-js
+
+    # Build-time environment variables
+    envs:
+      - key: VITE_API_URL
+        value: https://musicnme.com.au/api/v1
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        type: SECRET
+        scope: BUILD_TIME
+
+    routes:
+      - path: /
+
+    static_sites:
+      - name: music-n-me-web
+        catchall_document: index.html
+        error_document: index.html
+        routes:
+          - path: /
+
+# Managed Databases
+databases:
+  - name: db
+    engine: PG
+    version: "15"
+    production: true
+    cluster_name: music-n-me-db
+    db_name: musicnme
+    db_user: musicnme_user
+
+    # Database size (can scale up later)
+    # Basic: 1 vCPU, 1GB RAM, 10GB disk
+    # Professional: 2 vCPU, 4GB RAM, 61GB disk
+    size: db-s-1vcpu-1gb  # Basic tier for MVP
+
+    # High availability (production)
+    num_nodes: 1  # Start with 1, can scale to 2 for HA
+
+# Managed Redis
+redis:
+  - name: redis
+    engine: REDIS
+    version: "7"
+    production: true
+
+    # Redis size
+    size: db-s-1vcpu-1gb  # Basic tier for queues
+
+    # Eviction policy for cache
+    eviction_policy: allkeys-lru
+
+# Domains
+domains:
+  - domain: musicnme.com.au
+    type: PRIMARY
+    zone: musicnme.com.au
+  - domain: www.musicnme.com.au
+    type: ALIAS
+    zone: musicnme.com.au
+
+# Jobs (Background workers)
+jobs:
+  - name: queue-worker
+    github:
+      repo: your-org/music-n-me
+      branch: main
+    source_dir: /apps/backend
+    dockerfile_path: /deploy/docker/Dockerfile.backend
+
+    kind: WORKER
+    instance_count: 1
+    instance_size_slug: basic-xxs  # 0.5 vCPU, 512MB RAM
+
+    # Same environment variables as API
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_TIME
+      - key: REDIS_URL
+        type: SECRET
+        scope: RUN_TIME
+      # ... (same as API service)

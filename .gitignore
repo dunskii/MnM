@@ -70,4 +70,33 @@ service-account*.json
 credentials*.json
 
 # Test Credentials
-.login
+.login# Playwright E2E Test Artifacts
+# Add these lines to your main .gitignore
+
+# Test results
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Videos and screenshots
+**/test-results/*
+**/*.webm
+**/*.mp4
+
+# Trace files
+trace.zip
+*.trace
+
+# Playwright state
+.auth/
+
+# Load Testing
+apps/backend/tests/load/report.json
+apps/backend/tests/load/report.html
+apps/backend/tests/load/*.log
+
+# Production environment files
+.env.production
+apps/backend/.env.production
+apps/frontend/.env.production
+deploy/docker/.env

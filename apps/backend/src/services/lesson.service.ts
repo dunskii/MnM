@@ -1132,7 +1132,7 @@ export async function rescheduleLesson(
   // Queue notification emails if requested
   if (input.notifyParents !== false) {
     // Import dynamically to avoid circular dependencies
-    const { queueLessonRescheduledEmail } = await import('../jobs/emailNotification.job');
+    const { queueLessonRescheduledEmail } = await import('../jobs/emailNotification.job.js');
     await queueLessonRescheduledEmail(
       schoolId,
       lessonId,

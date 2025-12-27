@@ -6,6 +6,8 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Map .js imports to .ts files (for dynamic imports in TypeScript ESM)
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',

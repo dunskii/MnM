@@ -85,6 +85,14 @@ interface PaymentReceiptData {
   paymentDate: string;
 }
 
+// Error type for SendGrid API errors
+interface SendGridError extends Error {
+  code?: number;
+  response?: {
+    body?: unknown;
+  };
+}
+
 // ===========================================
 // BASE TEMPLATE
 // ===========================================
@@ -214,12 +222,13 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       await sgMail.send(msg);
       console.log(`Email sent: "${options.subject}" to ${options.to}`);
       return true;
-    } catch (error: any) {
-      lastError = error;
-      console.error(`Email send attempt ${attempt} failed:`, error.message);
+    } catch (error: unknown) {
+      const sendGridError = error as SendGridError;
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Email send attempt ${attempt} failed:`, lastError.message);
 
-      // Don't retry on client errors (4xx)
-      if (error.code >= 400 && error.code < 500) {
+      // Don't retry on client errors (4xx) - SendGrid returns error.code for HTTP status
+      if (sendGridError.code && sendGridError.code >= 400 && sendGridError.code < 500) {
         break;
       }
 

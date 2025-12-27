@@ -7,6 +7,12 @@
 import Bull from 'bull';
 import { config } from './index';
 
+// Sync result structure from job processor
+interface SyncJobResultItem {
+  syncedFolders?: number;
+  totalFolders?: number;
+}
+
 // ===========================================
 // QUEUE INSTANCES
 // ===========================================
@@ -89,8 +95,8 @@ googleDriveSyncQueue.on('completed', (job, result) => {
       `[Queue] Job ${job.id} completed. Synced ${result.syncedFolders}/${result.totalFolders} folders.`
     );
   } else if (Array.isArray(result)) {
-    const totalSynced = result.reduce((sum: number, r: any) => sum + (r.syncedFolders || 0), 0);
-    const totalFolders = result.reduce((sum: number, r: any) => sum + (r.totalFolders || 0), 0);
+    const totalSynced = result.reduce((sum: number, r: SyncJobResultItem) => sum + (r.syncedFolders || 0), 0);
+    const totalFolders = result.reduce((sum: number, r: SyncJobResultItem) => sum + (r.totalFolders || 0), 0);
     console.log(`[Queue] Job ${job.id} completed. Synced ${totalSynced}/${totalFolders} folders across ${result.length} schools.`);
   }
 });

@@ -6,7 +6,7 @@
 
 import { prisma } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
-import { MeetAndGreet, MeetAndGreetStatus } from '@prisma/client';
+import { MeetAndGreet, MeetAndGreetStatus, Prisma } from '@prisma/client';
 import {
   CreateMeetAndGreetInput,
   UpdateMeetAndGreetInput,
@@ -262,7 +262,7 @@ export async function getMeetAndGreets(
   schoolId: string,
   filters?: MeetAndGreetFilters
 ): Promise<MeetAndGreetWithRelations[]> {
-  const where: any = { schoolId }; // CRITICAL: Multi-tenancy filter
+  const where: Prisma.MeetAndGreetWhereInput = { schoolId }; // CRITICAL: Multi-tenancy filter
 
   if (filters?.status) {
     where.status = filters.status;

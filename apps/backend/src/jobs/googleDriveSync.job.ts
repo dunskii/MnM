@@ -66,9 +66,10 @@ googleDriveSyncQueue.process(async (job: Job<SyncJobData>) => {
     console.log(`[SyncJob] Job ${job.id} completed in ${duration}ms`);
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    console.error(`[SyncJob] Job ${job.id} failed after ${duration}ms:`, error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[SyncJob] Job ${job.id} failed after ${duration}ms:`, errorMessage);
     throw error; // Re-throw to trigger retry
   }
 });

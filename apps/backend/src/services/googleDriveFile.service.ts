@@ -8,7 +8,7 @@
 import { Readable } from 'stream';
 import { prisma } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
-import { FileVisibility, UserRole, GoogleDriveFile } from '@prisma/client';
+import { FileVisibility, UserRole, GoogleDriveFile, Prisma } from '@prisma/client';
 import * as driveService from './googleDrive.service';
 
 // ===========================================
@@ -42,6 +42,11 @@ export interface FileWithDetails extends GoogleDriveFile {
     lesson?: { id: string; name: string } | null;
     student?: { id: string; firstName: string; lastName: string } | null;
   };
+}
+
+// Error type for Google Drive API errors
+interface GoogleDriveApiError extends Error {
+  code?: number;
 }
 
 // ===========================================
@@ -81,7 +86,7 @@ export async function getFiles(
   userRole: UserRole,
   filters: FileFilters = {}
 ): Promise<FileWithDetails[]> {
-  const where: any = {
+  const where: Prisma.GoogleDriveFileWhereInput = {
     schoolId, // CRITICAL: Multi-tenancy filter
     deletedInDrive: filters.includeDeleted ? undefined : false,
   };
@@ -327,9 +332,10 @@ export async function deleteFile(
   if (deleteFromDrive && file.uploadedVia === 'PORTAL') {
     try {
       await driveService.deleteFileFromDrive(schoolId, file.driveFileId);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const driveError = error as GoogleDriveApiError;
       // Continue if file already deleted from Drive (404)
-      if (error.code !== 404 && !error.message?.includes('404')) {
+      if (driveError.code !== 404 && !driveError.message?.includes('404')) {
         throw error;
       }
     }

@@ -197,9 +197,9 @@ export async function syncFolder(folder: GoogleDriveFolder): Promise<SyncResult>
 
     result.success = true;
     result.duration = Date.now() - startTime;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Update status to ERROR
-    const errorMessage = error.message || 'Unknown error during sync';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error during sync';
     await prisma.googleDriveFolder.update({
       where: { id: folder.id },
       data: {
@@ -271,8 +271,9 @@ export async function syncAllSchools(): Promise<SyncJobResult[]> {
           result.results.filter((r) => !r.success).map((r) => ({ folder: r.folderName, error: r.error }))
         );
       }
-    } catch (error: any) {
-      console.error(`Failed to sync school ${schoolId}:`, error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to sync school ${schoolId}:`, errorMessage);
       // Create a failed result for this school
       results.push({
         schoolId,
